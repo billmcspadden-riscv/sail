@@ -34,7 +34,8 @@ SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
 #SAIL_DIR		:= /home/billmc/riscv/riscv_sail__billmcspadden-riscv.git
 SAIL_DIR		:= ../../..
 
-SRC				:= hello_world.sail
+#SRC				:= hello_world.sail
+SAIL_SRC			:= ./*.sail
 
 CC				:= gcc
 CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
@@ -67,7 +68,7 @@ out: out.c
 
 out.c: ${SRC}
 	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
-	${SAIL} ${SAIL_FLAGS} ${SRC}
+	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
 
 
 
