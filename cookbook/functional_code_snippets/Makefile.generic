@@ -57,7 +57,7 @@ out: out.c
 
 #	${CC} ${CCFLAGS} $<
 
-out.c: ${SRC}
+out.c: ${SAIL_SRC}
 	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
 	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
 
