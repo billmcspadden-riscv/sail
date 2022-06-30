@@ -30,7 +30,7 @@ SAIL_SRC		:= $(wildcard *.sail)
 
 CC				:= gcc
 CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
-C_SRC			:= out.c ${SAIL_DIR}/lib/*.c
+C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
 
 
 TARGET			:= out
