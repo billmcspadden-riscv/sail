@@ -2,14 +2,13 @@
 # ================================================================
 # Filename:		Makefile
 #
-# Description:	Makefile for building.....
+# Description:	Makefile for building example code
 #
-# Author(s):	Bill McSpadden (william.c.mcspadden@gmail.com)
+# Author(s):	Bill McSpadden (bill@riscv.org)
 #
 # Revision:		See revision control log 
 #
 # ================================================================
-
 
 #==============
 # Includes

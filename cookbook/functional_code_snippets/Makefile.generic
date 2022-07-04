@@ -10,12 +10,9 @@
 #
 # ================================================================
 
-
 #==============
 # Includes
 #==============
-
-
 
 #==============
 # Make variables
@@ -32,7 +29,6 @@ CC				:= gcc
 CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
 C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
 
-
 TARGET			:= out
 
 #==============
@@ -41,28 +37,19 @@ TARGET			:= out
 
 all: run
 
-
 build: out
-
 
 install:
 
 run: out
 	./out
 
-
 out: out.c
 	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
-
-
-#	${CC} ${CCFLAGS} $<
 
 out.c: ${SAIL_SRC}
 	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
 	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
-
-
-
 
 # clean:  cleans only local artifacts
 clean:

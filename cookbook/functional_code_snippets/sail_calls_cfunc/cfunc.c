@@ -56,6 +56,11 @@ cfunc_str(sail_string * zret_str, bool foo)
     strcpy(s, str);
     *zret_str =  s;
     return;
+
+    RECREATE(sail_string)(zret_str);
+
+
+
     }
 
 // TODO:  Add many more return types such as...

@@ -1,4 +1,12 @@
 # A Sail Cookbook:  Recipes for Small Bytes (Bill)
+## Table of Contents
+- [Introduction](#introduction)
+
+### List of programming examples
+- ["Hello, World!"](#hello-world-example-program-bill)
+
+
+## Introduction
 Sail is a programming language that was developed for the purpose
 of clearly, concisely and completely describing a computer's 
 Instruction Set Architecture (ISA).  This includes...
@@ -6,7 +14,8 @@ Instruction Set Architecture (ISA).  This includes...
 - specifying the general purpose registers
 - specifying the control space registers
 
-Sail was the language chosen to formally specify the RISC-V open source
+Sail was the language chosen by RISC-V International to formally
+specify the RISC-V open source
 ISA.  This docuement,  while not RISC-V specific,  is especially targeted for engineers who are working on specifying the RISC-V
 ISA. 
 
@@ -34,7 +43,8 @@ There is another useful Sail document that you should know about.  It is
 
 https://github.com/billmcspadden-riscv/sail/blob/cookbook_br/manual.pdf
 
-
+While useful,  the document does not contain a useful set of programming
+examples.  That is the purpose of *this* document.
 
 
 ## How to contribute (Bill)
@@ -53,6 +63,14 @@ https://github.com/billmcspadden-riscv/sail/blob/cookbook_br/manual.pdf
 ### standalone
 
 ### maintainership (when something breaks)
+
+### Syntax highlighting for Sail
+Syntax highlighting for several editors (emacs, vim, Visual Studio, etc)
+can be found at:
+
+https://github.com/rems-project/sail/tree/sail2/editors
+
+
 
 ## Sail installation
 ### Docker
@@ -79,7 +97,18 @@ Other Linux distis?  Or will Docker support?
 
 ### version management and what to expect
 
-## “Hello, World” program (Bill)
+
+## “Hello, World” example program (Bill)
+All example programs associated with this cookbook, can be found
+in <sail_git_root>/cookbook/functional_code_snippets/
+
+The purpose of this simple program is to show some of the basics
+of Sail and to ensure that you have the Sail compiler (and the other
+required tools) installed in your environment.
+
+It is assumed that you have built the sail compiler in the local 
+area. The Makefiles in the coding examples depend on this.
+
 The following code snippet comes from: 
 
 https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional_code_snippets/hello_world
@@ -87,29 +116,145 @@ https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional
 hello_world.sail:
 
 ```
-// vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    hello_world.sail
-//
-// Description: Example sail file
-//
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
-//
-// Revision:    See revision control log
-// ============================================================================
+// Two types of comments...
+// This type and ...
 
-default Order dec
-$include <prelude.sail>
+/*
+...block comments
+*/
+
+// Whitespace is NOT significant. Yay!
+
+default Order dec               // Required. Defines whether bit vectors are increasing (inc)
+                                //  (MSB is index 0; AKA big-endian) or decreasing (dec)
+                                //  (LSB is index 0; AKA little-endian)
+// default Order inc
+
+// The $include directive is used to pull in other Sail code.
+//  It functions similarly, but not exactly the same, as the
+//  C preproessor directrive.
+
+$include <prelude.sail>         // Sail is a very small language.  In order to get a set
+                                //  of useful functionality (eg - print to stdout), a set
+                                //  of functions and datatypes are defined in the file
+                                //  "prelude.sail"
+
+// ========================================================
+// Function signatures (same idea as C's function prototype)
+// ========================================================
 
 val "print" : string -> unit
 
 val main : unit -> unit
 
+// ========================================================
+// The entry point into the program starts at the function, main.
+// ========================================================
 function main() = 
     {
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
     }
+
+
+```
+So... that's the code we want to compile.  But how do we compile it?
+Remember, we want to use the sail compiler that was built in this 
+sandbox.  We use a 'make' methodology for building.  The first Makefile
+(in the same directory as the example code example) is very simple.
+It includes a generic Makefile (../Makefile.gneric) that is used
+for building most of the program examples.
+
+**Note:**  If you want to create and contribute your own example program
+and you need to deviate from our make methodolgy,  you would do that
+in your own test directory by writing your own Makefile.
+
+Makefile:
+```
+# vim: set tabstop=4 shiftwidth=4 noexpandtab
+# ================================================================
+# Filename:		Makefile
+#
+# Description:	Makefile for building example code
+#
+# Author(s):	Bill McSpadden (bill@riscv.org)
+#
+# Revision:		See revision control log 
+#
+# ================================================================
+
+#==============
+# Includes
+#==============
+
+include ../Makefile.generic
+
+```
+Makefile.generic is the Makefile that does the work for compilation.
+It depends on a local compilation of sail. See the [Installation](#sail-installation)
+section to understand how to install in the tools for your platform.
+
+../Makefile.generic :
+```
+# vim: set tabstop=4 shiftwidth=4 noexpandtab
+# ================================================================
+# Filename:		Makefile
+#
+# Description:	Makefile for building.....
+#
+# Author(s):	Bill McSpadden (william.c.mcspadden@gmail.com)
+#
+# Revision:		See revision control log 
+#
+# ================================================================
+
+#==============
+# Includes
+#==============
+
+#==============
+# Make variables
+#==============
+SAIL_DIR		:= ../../..
+SAIL_LIB		:= ${SAIL_DIR}/lib/sail
+SAIL			:= ${SAIL_DIR}/sail
+SAIL_OUTFILE	:= out
+SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
+
+SAIL_SRC		:= $(wildcard *.sail)
+
+CC				:= gcc
+CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
+C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
+
+TARGET			:= out
+
+#==============
+# Targets and Rules
+#==============
+
+all: run
+
+build: out
+
+install:
+
+run: out
+	./out
+
+out: out.c
+	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+
+out.c: ${SAIL_SRC}
+	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
+	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
+
+# clean:  cleans only local artifacts
+clean:
+	rm -f out out.c out.ml
+
+# Cleans local artifacts and the install location
+clean_all:
 
 
 
