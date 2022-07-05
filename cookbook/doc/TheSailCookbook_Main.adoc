@@ -209,6 +209,8 @@ C foreigh function interface where we will show how Sail can call C functions).
 - int
 - Multi-precision
 
+=== type variables
+What does " 'n " mean?
 === Bits
 === Strings
 === Lists
