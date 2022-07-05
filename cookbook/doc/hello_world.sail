@@ -1,1 +1,0 @@
-../functional_code_snippets/hello_world/hello_world.sail

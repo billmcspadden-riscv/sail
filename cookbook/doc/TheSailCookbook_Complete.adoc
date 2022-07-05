@@ -140,9 +140,6 @@ hello_world.sail:
 //include doesn't appear to render in github
 [source, sail]
 ----
-/*
-```
-*/
 // Two types of comments...
 // This type and ...
 
@@ -183,9 +180,6 @@ function main() =
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
     }
-/*
-```
-*/
 
 ----
 

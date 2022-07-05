@@ -1,11 +1,45 @@
+# vim: set tabstop=4 shiftwidth=4 noexpandtab
+# ================================================================
+# Filename:		Makefile
+#
+# Description:	Makefile for building a complete Sail cookbook
+#
+# 				asciidoctor-reducer needs to be installed
+#
+# 				Because github does not handle 'include' directives,
+#				we use asciidoctor-reducer to pull in the various
+#				include files into one adoc file which can be
+#				rendered by github.
+#
+#				NOTE: Some git trickery is needed in order to ensure that
+#				the complete file has been compiled to the latest 
+#				level and then committed.  See the .git/hooks/pre-commit
+#				and .git/hooks/post-commit so see how this is done.
+#
+# Author(s):	Bill McSpadden (bill@riscv.org)
+#
+# Revision:		See git logs
+#
+# ================================================================
 
-TMP_ADOC	:= ./tmp.adoc
+#==============
+# Includes
+#==============
 
-all : TheSailCookbook_Complete.adoc
 
-TheSailCookbook_Complete.adoc : 
+#==============
+# Make variables
+#==============
 
-TheSailCookbook_Complete.adoc : TheSailCookbook_Main.adoc
+FINAL_ADOC_TARGET 	:= TheSailCookbook_Complete.adoc
+TOP_ADOC_FILE		:= TheSailCookbook_Main.adoc
+
+TMP_ADOC			:= ./tmp.adoc
+
+all : ${FINAL_ADOC_TARGET}
+
+
+${FINAL_ADOC_TARGET} : ${TOP_ADOC_FILE}
 	asciidoctor-reducer $< -o $@ ;
 	rm -f ${TMP_ADOC} ;
 	echo "// =========================================================================" >> ${TMP_ADOC} ;
@@ -16,6 +50,12 @@ TheSailCookbook_Complete.adoc : TheSailCookbook_Main.adoc
 	rm -f $@.tmp ${TMP_ADOC} ;
 
 clean:
-	rm -f TheSailCookbook_Complete.adoc ${TMP_ADOC}
+	rm -f ${FINAL_ADOC_TARGET} ${TMP_ADOC}
+
+
+# Placeholder for putting in all included files so that
+# TODO: perhaps autogenerate the dependency list from the 
+# TOP_ADOC_FILE???
+${FINAL_ADOC_TARGET} : 
 
 
