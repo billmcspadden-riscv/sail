@@ -208,6 +208,7 @@ C foreigh function interface where we will show how Sail can call C functions).
 - Int
 - int
 - Multi-precision
+
 === Bits
 === Strings
 === Lists
@@ -219,6 +220,10 @@ C foreigh function interface where we will show how Sail can call C functions).
 === Functions
 === Control flow
 === Iteration 
+- for
+- while
+- lamba function
+
 === matches
 
 == Description prelude.sail
