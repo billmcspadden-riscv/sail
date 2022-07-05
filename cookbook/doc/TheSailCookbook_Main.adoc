@@ -12,7 +12,7 @@
 
 - ["Hello, World!"](#hello-world-example-program-bill)
 
-:sectnums: 
+:sectnums:
 == Introduction
 
 Sail is a programming language that was developed for the purpose
@@ -104,7 +104,7 @@ Are there other OS platforms that should be supported?
 Other Linux distis?  Or will Docker support?
 
 == Basic description
- what sail is
+=== what sail is
 - sequential model only
 - non-parallel
 

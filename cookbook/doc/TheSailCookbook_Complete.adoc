@@ -107,7 +107,7 @@ Are there other OS platforms that should be supported?
 Other Linux distis?  Or will Docker support?
 
 == Basic description
- what sail is
+=== what sail is
 - sequential model only
 - non-parallel
 
