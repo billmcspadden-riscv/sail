@@ -131,7 +131,10 @@ https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional
 
 hello_world.sail:
 
-include::../functional_code_snippets/hello_world/hello_world.sail[]
+[source, sail]
+----
+include::hello_world.sail[]
+----
 
 So... that's the code we want to compile.  But how do we compile it?
 Remember, we want to use the sail compiler that was built in this 
