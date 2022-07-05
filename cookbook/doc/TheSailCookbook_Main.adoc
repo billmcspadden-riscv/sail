@@ -211,11 +211,17 @@ C foreigh function interface where we will show how Sail can call C functions).
 
 === type variables
 What does " 'n " mean?
+
 === Bits
+
 === Strings
+
 === Lists
+
 === Structs
+
 === mappings
+
 === Liquid data types (Martin)
 
 == Execution
@@ -227,6 +233,10 @@ What does " 'n " mean?
 - lamba function
 
 === matches
+
+== Other stuff
+
+===  __FILE__ , __LINE__ , __LOC__
 
 == Description prelude.sail
 
