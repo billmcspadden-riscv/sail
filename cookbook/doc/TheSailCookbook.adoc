@@ -1,5 +1,7 @@
 = A Sail Cookbook:  Recipes for Small Bytes (Bill)
 
+include::SampleInclude.adoc[]
+
 == Table of Contents
 
 :toc:
@@ -131,6 +133,7 @@ https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional
 
 hello_world.sail:
 
+//include doesn't appear to render in github
 [source, sail]
 ----
 include::hello_world.sail[]
@@ -140,7 +143,7 @@ So... that's the code we want to compile.  But how do we compile it?
 Remember, we want to use the sail compiler that was built in this 
 sandbox.  We use a 'make' methodology for building.  The first Makefile
 (in the same directory as the example code example) is very simple.
-It includes a generic Makefile (../Makefile.gneric) that is used
+It includes a generic Makefile (../Makefile.generic) that is used
 for building most of the program examples.
 
 
