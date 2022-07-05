@@ -1,8 +1,6 @@
 = A Sail Cookbook:  Recipes for Small Bytes (Bill)
 :doctype: book
 
-include::SampleInclude.adoc[]
-
 == Table of Contents
 
 :toc:
@@ -134,10 +132,14 @@ https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional
 
 hello_world.sail:
 
-//include doesn't appear to render in github
+// include doesn't appear to render in github
+// Therefore, asciidoctor-reducer will be used to create
+// a complete (all files included) file, which will be
+// committed by git.  
+
 [source, sail]
 ----
-include::hello_world.sail[]
+include::../functional_code_snippets/hello_world/hello_world.sail[]
 ----
 
 So... that's the code we want to compile.  But how do we compile it?
@@ -152,110 +154,29 @@ for building most of the program examples.
 and you need to deviate from our make methodolgy,  you would do that
 in your own test directory by writing your own Makefile.
 
-The basic flow
+The basic flow is: + 
+*.sail  --(Sail)--> out.c, *.c --(gcc)--> executable
+
 
 Makefile:
-```
-# vim: set tabstop=4 shiftwidth=4 noexpandtab
-# ================================================================
-# Filename:		Makefile
-#
-# Description:	Makefile for building example code
-#
-# Author(s):	Bill McSpadden (bill@riscv.org)
-#
-# Revision:		See revision control log 
-#
-# ================================================================
 
-#==============
-# Includes
-#==============
+[source, makefile]
+----
+include::../functional_code_snippets/hello_world/Makefile[]
+----
 
-include ../Makefile.generic
 
-```
 Makefile.generic is the Makefile that does the work for compilation.
 It depends on a local compilation of sail. See the [Installation](#sail-installation)
 section to understand how to install in the tools for your platform.
 
-../Makefile.generic :
-```
+Makefile:
 
-# vim: set tabstop=4 shiftwidth=4 noexpandtab
-# ================================================================
-# Filename:		Makefile
-#
-# Description:	Makefile for building.....
-#
-# Author(s):	Bill McSpadden (bill@riscv.org)
-#
-# Revision:		See revision control log 
-#
-# ================================================================
+[source, makefile]
+----
+include::../functional_code_snippets/Makefile.generic[]
+----
 
-#==============
-# Includes
-#==============
-
-#==============
-# Make variables
-#==============
-SAIL_DIR		:= ../../..
-SAIL_LIB		:= ${SAIL_DIR}/lib/sail
-SAIL			:= ${SAIL_DIR}/sail
-SAIL_OUTFILE	:= out
-SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
-
-SAIL_SRC		:= $(wildcard *.sail)
-
-CC				:= gcc
-CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
-
-# out.c is the file that sail generates as output from the
-#   sail compilation process.  It will be compiled with
-#   other C code to generate an executable
-# ${SAIL_DIR}/lib/*.c is a set of C code used for interaction
-#   with the programming environment.  It also provides 
-#   functionality that cannot be natively supported by sail.
-#   
-C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
-
-TARGET			:= out
-
-#==============
-# Targets and Rules
-#==============
-
-all: run
-
-build: out
-
-install:
-
-run: out
-	./out
-
-out: out.c
-	gcc ${C_SRC} ${CCFLAGS} -o $@
-
-#	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
-
-# In the following rule,  the environment variable, SAIL_DIR,  must be
-#	set  in order for the sail compilation step to work correctly.
-out.c: ${SAIL_SRC}
-	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
-	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
-
-# clean:  cleans only local artifacts
-clean:
-	rm -f out out.c out.ml
-
-# Cleans local artifacts and the install location
-clean_all:
-
-
-```
 What does the compilation process look like?  Under Ubuntu Linux,  this
 is the output you can expect for compiling and running the "hello world"
 example program.
