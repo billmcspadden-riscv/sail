@@ -1,3 +1,6 @@
+/*
+```
+*/
 // Two types of comments...
 // This type and ...
 
@@ -38,4 +41,7 @@ function main() =
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
     }
+/*
+```
+*/
 
