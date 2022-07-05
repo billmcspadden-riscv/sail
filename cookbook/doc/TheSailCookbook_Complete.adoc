@@ -96,6 +96,8 @@ TBD
 
 === MacOS (Martin)
 
+TBD
+
 === Windows
 Support of a native command line interface is not planned.  If you
 want to run Sail under Windows,  plan on running it under Cygwin.
