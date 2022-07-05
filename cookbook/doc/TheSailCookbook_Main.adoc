@@ -205,6 +205,9 @@ C foreigh function interface where we will show how Sail can call C functions).
 == Data types
 === effect annotations
 === Integers
+- Int
+- int
+- Multi-precision
 === Bits
 === Strings
 === Lists
