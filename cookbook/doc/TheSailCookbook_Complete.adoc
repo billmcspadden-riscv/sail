@@ -4,8 +4,6 @@
 = A Sail Cookbook:  Recipes for Small Bytes (Bill)
 :doctype: book
 
-= Another title (to test the asciidoc include directive)
-
 == Table of Contents
 
 :toc:
@@ -137,7 +135,11 @@ https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional
 
 hello_world.sail:
 
-//include doesn't appear to render in github
+// include doesn't appear to render in github
+// Therefore, asciidoctor-reducer will be used to create
+// a complete (all files included) file, which will be
+// committed by git.
+
 [source, sail]
 ----
 // Two types of comments...
@@ -195,10 +197,14 @@ for building most of the program examples.
 and you need to deviate from our make methodolgy,  you would do that
 in your own test directory by writing your own Makefile.
 
-The basic flow
+The basic flow is: +
+*.sail  --(Sail)--> out.c, *.c --(gcc)--> executable
+
 
 Makefile:
-```
+
+[source, makefile]
+----
 # vim: set tabstop=4 shiftwidth=4 noexpandtab
 # ================================================================
 # Filename:		Makefile
@@ -207,7 +213,7 @@ Makefile:
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log
+# Revision:		See revision control log 
 #
 # ================================================================
 
@@ -217,14 +223,17 @@ Makefile:
 
 include ../Makefile.generic
 
-```
+----
+
+
 Makefile.generic is the Makefile that does the work for compilation.
 It depends on a local compilation of sail. See the [Installation](#sail-installation)
 section to understand how to install in the tools for your platform.
 
-../Makefile.generic :
-```
+Makefile:
 
+[source, makefile]
+----
 # vim: set tabstop=4 shiftwidth=4 noexpandtab
 # ================================================================
 # Filename:		Makefile
@@ -233,7 +242,7 @@ section to understand how to install in the tools for your platform.
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log
+# Revision:		See revision control log 
 #
 # ================================================================
 
@@ -259,10 +268,10 @@ CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
 #   sail compilation process.  It will be compiled with
 #   other C code to generate an executable
 # ${SAIL_DIR}/lib/*.c is a set of C code used for interaction
-#   with the programming environment.  It also provides
+#   with the programming environment.  It also provides 
 #   functionality that cannot be natively supported by sail.
-#
-C_SRC			:= out.c ${SAIL_DIR}/lib/*.c
+#   
+C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
 
 TARGET			:= out
 
@@ -298,7 +307,9 @@ clean:
 clean_all:
 
 
-```
+
+----
+
 What does the compilation process look like?  Under Ubuntu Linux,  this
 is the output you can expect for compiling and running the "hello world"
 example program.
