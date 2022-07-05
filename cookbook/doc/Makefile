@@ -38,6 +38,8 @@ TMP_ADOC			:= ./tmp.adoc
 
 all : ${FINAL_ADOC_TARGET}
 
+echo_final_adoc_target :
+	echo ${FINAL_ADOC_TARGET} ;
 
 ${FINAL_ADOC_TARGET} : ${TOP_ADOC_FILE}
 	asciidoctor-reducer $< -o $@ ;
