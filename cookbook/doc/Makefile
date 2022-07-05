@@ -31,17 +31,32 @@
 # Make variables
 #==============
 
-FINAL_ADOC_TARGET 	:= TheSailCookbook_Complete.adoc
-TOP_ADOC_FILE		:= TheSailCookbook_Main.adoc
+FINAL_ADOC_TARGET 		:= TheSailCookbook_Complete.adoc
+TOP_ADOC_FILE			:= TheSailCookbook_Main.adoc
 
-TMP_ADOC			:= ./tmp.adoc
+ALL_DEPENDENCIES		:= 
+CODE_SNIPPETS_DIR 		:= ../functional_code_snippets
+ALL_DEPENDENCIES		+= ${CODE_SNIPPETS_DIR}/Makefile.generic
 
+# hello_world example
+HELLO_WORLD_DIR 		:= ${CODE_SNIPPETS_DIR}/hello_world
+HELLO_WORLD_FILES		:= ${HELLO_WORLD_DIR}/hello_world.sail  ${HELLO_WORLD_DIR}/Makefile
+
+ALL_DEPENDENCIES		+= ${HELLO_WORLD_FILES}
+
+
+TMP_ADOC				:= ./tmp.adoc
+
+#==============
+# Targets and rules
+#==============
 all : ${FINAL_ADOC_TARGET}
 
 echo_final_adoc_target :
 	echo ${FINAL_ADOC_TARGET} ;
 
-${FINAL_ADOC_TARGET} : ${TOP_ADOC_FILE}
+
+${FINAL_ADOC_TARGET} : ${TOP_ADOC_FILE} ${ALL_DEPENDENCIES}
 	asciidoctor-reducer $< -o $@ ;
 	rm -f ${TMP_ADOC} ;
 	echo "// =========================================================================" >> ${TMP_ADOC} ;
@@ -51,13 +66,10 @@ ${FINAL_ADOC_TARGET} : ${TOP_ADOC_FILE}
 	cat ${TMP_ADOC} $@.tmp > $@ ;
 	rm -f $@.tmp ${TMP_ADOC} ;
 
+.PHONY: clean
 clean:
 	rm -f ${FINAL_ADOC_TARGET} ${TMP_ADOC}
 
 
-# Placeholder for putting in all included files so that
-# TODO: perhaps autogenerate the dependency list from the 
-# TOP_ADOC_FILE???
-${FINAL_ADOC_TARGET} : 
 
 
