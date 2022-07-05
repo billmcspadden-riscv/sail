@@ -1,12 +1,19 @@
-# A Sail Cookbook:  Recipes for Small Bytes (Bill)
-## Table of Contents
+= A Sail Cookbook:  Recipes for Small Bytes (Bill)
+
+== Table of Contents
+
+:toc:
+
+
 - [Introduction](#introduction)
 
-### List of programming examples
+== List of programming examples
+
 - ["Hello, World!"](#hello-world-example-program-bill)
 
+:sectnums: 
+== Introduction
 
-## Introduction
 Sail is a programming language that was developed for the purpose
 of clearly, concisely and completely describing a computer's 
 Instruction Set Architecture (ISA).  This includes...
@@ -47,24 +54,25 @@ While useful,  the document does not contain a useful set of programming
 examples.  That is the purpose of *this* document.
 
 
-## How to contribute (Bill)
+== How to contribute (Bill)
 
 
-### pull requests (Bill)
+=== pull requests (Bill)
 
-### RISC-V working groups (Bill)
+=== RISC-V working groups (Bill)
 
-### style and contribution guide
+=== style and contribution guide
 
-### brevity
+=== brevity
 
-### short executable
+=== short executable
 
-### standalone
+=== standalone
 
-### maintainership (when something breaks)
+=== maintainership (when something breaks)
 
-### Syntax highlighting for Sail
+=== Syntax highlighting for Sail
+
 Syntax highlighting for several editors (emacs, vim, Visual Studio, etc)
 can be found at:
 
@@ -72,33 +80,41 @@ https://github.com/rems-project/sail/tree/sail2/editors
 
 
 
-## Sail installation
-### Docker
-### Ubuntu (Bill Mc.)
-### MacOS (Martin)
-### Windows 
+== Sail installation
+=== Docker
+
+TBD
+
+=== Ubuntu (Bill Mc.)
+
+=== MacOS (Martin)
+
+=== Windows 
 Support of a native command line interface is not planned.  If you
 want to run Sail under Windows,  plan on running it under Cygwin.
 
-### Windows: Cygwin (Bill Mc.,  low priority)
+=== Windows: Cygwin (Bill Mc.,  low priority)
+
 If there is a demand,  a port to Cygwin will be attempted.
 
-### Other?
+=== Other?
+
 Are there other OS platforms that should be supported?
 Other Linux distis?  Or will Docker support?
 
-## Basic description
-### what sail is
+== Basic description
+ what sail is
 - sequential model only
 - non-parallel
-### what sail is not 
+
+=== what sail is not 
 - not a RTL language, etc
 - Sail does not support any parallelism.  No threads.  No event sequences.  No clocking.
 
-### version management and what to expect
+=== version management and what to expect
 
 
-## “Hello, World” example program (Bill)
+== “Hello, World” example program (Bill)
 All example programs associated with this cookbook, can be found
 in <sail_git_root>/cookbook/functional_code_snippets/
 
@@ -115,49 +131,7 @@ https://github.com/billmcspadden-riscv/sail/tree/cookbook_br/cookbook/functional
 
 hello_world.sail:
 
-```
-// Two types of comments...
-// This type and ...
-
-/*
-...block comments
-*/
-
-// Whitespace is NOT significant. Yay!
-
-default Order dec               // Required. Defines whether bit vectors are increasing (inc)
-                                //  (MSB is index 0; AKA big-endian) or decreasing (dec)
-                                //  (LSB is index 0; AKA little-endian)
-// default Order inc
-
-// The $include directive is used to pull in other Sail code.
-//  It functions similarly, but not exactly the same, as the
-//  C preproessor directrive.
-
-$include <prelude.sail>         // Sail is a very small language.  In order to get a set
-                                //  of useful functionality (eg - print to stdout), a set
-                                //  of functions and datatypes are defined in the file
-                                //  "prelude.sail"
-
-// ========================================================
-// Function signatures (same idea as C's function prototype)
-// ========================================================
-
-val "print" : string -> unit
-
-val main : unit -> unit
-
-// ========================================================
-// The entry point into the program starts at the function, main.
-// ========================================================
-function main() = 
-    {
-    print("hello, world!\n") ;
-    print("hello, another world!\n") ;
-    }
-
-
-```
+include::../functional_code_snippets/hello_world/hello_world.sail[]
 
 So... that's the code we want to compile.  But how do we compile it?
 Remember, we want to use the sail compiler that was built in this 
@@ -166,7 +140,8 @@ sandbox.  We use a 'make' methodology for building.  The first Makefile
 It includes a generic Makefile (../Makefile.gneric) that is used
 for building most of the program examples.
 
-**Note:**  If you want to create and contribute your own example program
+
+[Note]  If you want to create and contribute your own example program
 and you need to deviate from our make methodolgy,  you would do that
 in your own test directory by writing your own Makefile.
 
@@ -294,30 +269,30 @@ Now that we've examined the Makefiles,  we will make little mention of them
 in the rest of this document (except for the example where we discuss the 
 C foreigh function interface where we will show how Sail can call C functions).
 
-## Data types
-### effect annotations
-### Integers
-### Bits
-### Strings
-### Lists
-### Structs
-### mappings
-### Liquid data types (Martin)
+== Data types
+=== effect annotations
+=== Integers
+=== Bits
+=== Strings
+=== Lists
+=== Structs
+=== mappings
+=== Liquid data types (Martin)
 
-## Execution
-### Functions
-### Control flow
-### Iteration 
-### matches
+== Execution
+=== Functions
+=== Control flow
+=== Iteration 
+=== matches
 
-## Description prelude.sail
-### description of print, sext, equility etc.  standard template stuff
-### the C interface
+== Description prelude.sail
+=== description of print, sext, equility etc.  standard template stuff
+=== the C interface
 
-## CPU example
+== CPU example
 - From nand2tetris
 
 
-## Formal tools that analyze Sail source code
+== Formal tools that analyze Sail source code
 <template>
 coverage
