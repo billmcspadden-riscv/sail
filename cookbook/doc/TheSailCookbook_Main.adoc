@@ -227,5 +227,5 @@ C foreigh function interface where we will show how Sail can call C functions).
 
 
 == Formal tools that analyze Sail source code
-<template>
+
 coverage
