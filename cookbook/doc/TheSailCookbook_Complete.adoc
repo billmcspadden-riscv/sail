@@ -82,7 +82,8 @@ can be found at:
 
 https://github.com/rems-project/sail/tree/sail2/editors
 
-
+It is beyond the scope of this document to describe how to use
+the syntax highlighting for the various editors.
 
 == Sail installation
 === Docker
