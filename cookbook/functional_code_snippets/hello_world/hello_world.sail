@@ -1,3 +1,6 @@
+/*
+```
+*/
 // Two types of comments...
 // This type and ...
 
@@ -16,10 +19,11 @@ default Order dec               // Required. Defines whether bit vectors are inc
 //  It functions similarly, but not exactly the same, as the
 //  C preproessor directrive.
 
-$include <prelude.sail>         // Sail is a very small language.  In order to get a set
-                                //  of useful functionality (eg - print to stdout), a set
-                                //  of functions and datatypes are defined in the file
-                                //  "prelude.sail"
+// Sail is a very small language.  In order to get a set
+//  of useful functionality (eg - print to stdout), a set
+//  of functions and datatypes are defined in the file
+//  "prelude.sail"
+$include <prelude.sail>
 
 // ========================================================
 // Function signatures (same idea as C's function prototype)
@@ -38,4 +42,6 @@ function main() =
     print("hello, another world!\n") ;
     }
 
-
+/*
+```
+*/

@@ -4,7 +4,7 @@
 #
 # Description:	Makefile for building.....
 #
-# Author(s):	Bill McSpadden (william.c.mcspadden@gmail.com)
+# Author(s):	Bill McSpadden (bill@riscv.org)
 #
 # Revision:		See revision control log 
 #
@@ -26,7 +26,15 @@ SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
 SAIL_SRC		:= $(wildcard *.sail)
 
 CC				:= gcc
-CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
+CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
+
+# out.c is the file that sail generates as output from the
+#   sail compilation process.  It will be compiled with
+#   other C code to generate an executable
+# ${SAIL_DIR}/lib/*.c is a set of C code used for interaction
+#   with the programming environment.  It also provides 
+#   functionality that cannot be natively supported by sail.
+#   
 C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
 
 TARGET			:= out
@@ -45,8 +53,12 @@ run: out
 	./out
 
 out: out.c
-	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+	gcc ${C_SRC} ${CCFLAGS} -o $@
 
+#	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+
+# In the following rule,  the environment variable, SAIL_DIR,  must be
+#	set  in order for the sail compilation step to work correctly.
 out.c: ${SAIL_SRC}
 	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
 	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
