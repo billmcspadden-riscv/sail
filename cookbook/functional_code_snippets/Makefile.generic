@@ -17,6 +17,10 @@
 #==============
 # Make variables
 #==============
+
+# The sail compiler expects that SAIL_DIR is set in the environment.
+#	The sh env var, SAIL_DIR,  is set and exported using the make
+#	variable, SAIL_DIR.  I hope this is not too confusing.
 SAIL_DIR		:= ../../..
 SAIL_LIB		:= ${SAIL_DIR}/lib/sail
 SAIL			:= ${SAIL_DIR}/sail

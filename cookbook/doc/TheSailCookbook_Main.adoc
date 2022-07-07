@@ -1,16 +1,26 @@
-= A Sail Cookbook:  Recipes for Small Bytes (Bill)
 :doctype: book
-
-== Table of Contents
-
+:sectids:
+The Sail Programming Language: A Sail Cookbook
+==============================================
 :toc:
+:toc-placement: preamble
+:toclevels: 2
+
+:showtitle:
 
 
-- [Introduction](#introduction)
+// Need some preamble to get TOC
+{empty}
 
-== List of programming examples
+== List of programming examples (in increasing complexity)
 
-- ["Hello, World!"](#hello-world-example-program-bill)
+The main purpose of this document,  is to give the user a quick 
+reference to Sail coding examples. The following is a list of 
+all the programming examples found in this document.
+
+<<hello_world>>
+
+
 
 :sectnums:
 == Introduction
@@ -119,7 +129,7 @@ Other Linux distis?  Or will Docker support?
 
 === version management and what to expect
 
-
+[#hello_world]
 == “Hello, World” example program (Bill)
 All example programs associated with this cookbook, can be found
 in <sail_git_root>/cookbook/functional_code_snippets/
@@ -200,7 +210,7 @@ ubuntu-VirtualBox 228>
 
 Now that we've examined the Makefiles,  we will make little mention of them
 in the rest of this document (except for the example where we discuss the 
-C foreigh function interface where we will show how Sail can call C functions).
+C foreign function interface where we will show how Sail can call C functions).
 
 == Data types
 === effect annotations
