@@ -33,6 +33,7 @@
 
 FINAL_ADOC_TARGET 		:= TheSailCookbook_Complete.adoc
 TOP_ADOC_FILE			:= TheSailCookbook_Main.adoc
+FINAL_PDF_TARGET		:= TheSailCookbook_Complete.pdf
 
 ALL_DEPENDENCIES		:= 
 CODE_SNIPPETS_DIR 		:= ../functional_code_snippets
@@ -50,7 +51,7 @@ TMP_ADOC				:= ./tmp.adoc
 #==============
 # Targets and rules
 #==============
-all : ${FINAL_ADOC_TARGET}
+all : ${FINAL_ADOC_TARGET} ${FINAL_PDF_TARGET}
 
 echo_final_adoc_target :
 	echo ${FINAL_ADOC_TARGET} ;
@@ -66,9 +67,13 @@ ${FINAL_ADOC_TARGET} : ${TOP_ADOC_FILE} ${ALL_DEPENDENCIES}
 	cat ${TMP_ADOC} $@.tmp > $@ ;
 	rm -f $@.tmp ${TMP_ADOC} ;
 
+${FINAL_PDF_TARGET} : ${FINAL_ADOC_TARGET}
+	asciidoctor-pdf $<
+
+
 .PHONY: clean
 clean:
-	rm -f ${FINAL_ADOC_TARGET} ${TMP_ADOC}
+	rm -f ${FINAL_ADOC_TARGET} ${FINAL_PDF_TARGET} ${TMP_ADOC} 
 
 
 

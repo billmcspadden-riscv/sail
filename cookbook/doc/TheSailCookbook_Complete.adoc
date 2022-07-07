@@ -5,6 +5,7 @@
 :sectids:
 The Sail Programming Language: A Sail Cookbook
 ==============================================
+William C. McSpadden <bill@riscv.org>; Martin Berger <contact@martinfriedrichberger.net>
 :toc:
 :toc-placement: preamble
 :toclevels: 2
