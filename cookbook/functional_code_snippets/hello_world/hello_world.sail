@@ -1,3 +1,6 @@
+
+// ==========================================================================
+
 // Two types of comments...
 // This type and ...
 
@@ -7,10 +10,9 @@
 
 // Whitespace is NOT significant. Yay!
 
-default Order dec               // Required. Defines whether bit vectors are increasing (inc)
-                                //  (MSB is index 0; AKA big-endian) or decreasing (dec)
-                                //  (LSB is index 0; AKA little-endian)
-// default Order inc
+default Order dec   // Required. Defines whether bit vectors are increasing 
+                    // (inc) (MSB is index 0; AKA big-endian) or decreasing 
+                    // (dec) (LSB is index 0; AKA little-endian)
 
 // The $include directive is used to pull in other Sail code.
 //  It functions similarly, but not exactly the same, as the

@@ -49,14 +49,24 @@ function my_replicate_bits_2(n, xs) = {
   ys
 }
 
-val cast extz : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+// The following comment is of interest for reasons other than 
+//  functionality.  The Sail syntax is still being developed.
+//  Attention should be paid to the issues reported to the Sail
+//  team (via github) and when releases are made (again via github).
 
-function extz(m, xs) = zero_extend(xs, m)
+// The following is deprecated per Alasdair Armstrong:
+//  I would just remove that example as the cast feature is now 
+//  deprecated in the latest version (and the risc-v model has 
+//  always used a flag fully disabling it anyway)
 
-val my_replicate_bits_3 : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
-
-function my_replicate_bits_3(n, xs) = {
-  ys = zeros('n * 'm);
-  foreach (i from 1 to n) ys = ys << 'm | xs;
-  ys
-}
+// val cast extz : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+//
+//function extz(m, xs) = zero_extend(xs, m)
+//
+//val my_replicate_bits_3 : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+//
+//function my_replicate_bits_3(n, xs) = {
+//  ys = zeros('n * 'm);
+//  foreach (i from 1 to n) ys = ys << 'm | xs;
+//  ys
+//}
