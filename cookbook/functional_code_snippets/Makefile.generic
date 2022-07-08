@@ -1,14 +1,19 @@
 # vim: set tabstop=4 shiftwidth=4 noexpandtab
-# ================================================================
+# ==========================================================================
 # Filename:		Makefile
 #
-# Description:	Makefile for building.....
+# Description:	Makefile for building Sail example code fragments
+#
+#				NOTE: in order to render this file in an asciidoc
+#				for the Sail cookbook, keep the line length less 
+#				then 86 characters, the width of the block comment line
+#				of this section
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
 # Revision:		See revision control log 
 #
-# ================================================================
+# ==========================================================================
 
 #==============
 # Includes

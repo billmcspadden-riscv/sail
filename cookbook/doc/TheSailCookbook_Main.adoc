@@ -21,6 +21,8 @@ all the programming examples found in this document.
 
 <<hello_world>>
 
+<<my_replicate_bits>>
+
 
 
 :sectnums:
@@ -213,6 +215,10 @@ Now that we've examined the Makefiles,  we will make little mention of them
 in the rest of this document (except for the example where we discuss the 
 C foreign function interface where we will show how Sail can call C functions).
 
+=== "Hello, World" and the Sail interactive interpretter
+
+TBD
+
 == Data types
 === effect annotations
 === Integers
@@ -237,6 +243,42 @@ What does " 'n " mean?
 
 == Execution
 === Functions
+
+
+
+
+[#my_replicate_bits]
+=== The ``my_replicate_bits()`` function from the Sail manual (Bill)
+
+First,  let's look at the code that is described in the Sail manual for the function, my_replicate_bits().  
+
+Note:
+The following code actually comes from the file doc/examples/my_replicate_bits.sail.  It is a little bit different than what is shown in the manual for reasons that will be covered here.
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_manual_example_my_replicate_bits/my_replicate_bits.sail[]
+----
+
+You will see in this code,  that there is no 'main' function,  and as such, will not compile into a C Sail model.  You will get the following error message:
+
+TODO: get the error message.
+
+In order to get this to compile into a C Sail model,  you will need to provide a main function.  The following code shows the implementation of a ``main()`` function that calls my_replicate bits().
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_manual_example_my_replicate_bits/main.sail[]
+----
+
+Because both the files, my_replicate_bits.sail and main.sail, need to have the function signatures in order to compile (and we want them to be consistent),  the function signatures have been put into a seperate file that is include by both.  Here is the function signature file, my_replicate_bits_function_signatures.sail:
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_manual_example_my_replicate_bits/my_replicate_bits_function_signatures.sail[]
+----
+
+
 === Control flow
 === Iteration 
 - for
@@ -264,3 +306,10 @@ of many support functions.
 == Formal tools that analyze Sail source code
 
 coverage
+
+== FAQs (Frequently Asked Questions)
+
+Following are a set of FAQs that were generated via set of questions to the Sail developers.
+
+include::./FAQ_RISCV_model.adoc[]
+

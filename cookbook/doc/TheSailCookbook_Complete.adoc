@@ -24,6 +24,8 @@ all the programming examples found in this document.
 
 <<hello_world>>
 
+<<my_replicate_bits>>
+
 
 
 :sectnums:
@@ -251,16 +253,21 @@ Makefile:
 [source, makefile]
 ----
 # vim: set tabstop=4 shiftwidth=4 noexpandtab
-# ================================================================
+# ==========================================================================
 # Filename:		Makefile
 #
-# Description:	Makefile for building.....
+# Description:	Makefile for building Sail example code fragments
+#
+#				NOTE: in order to render this file in an asciidoc
+#				for the Sail cookbook, keep the line length less 
+#				then 86 characters, the width of the block comment line
+#				of this section
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
 # Revision:		See revision control log 
 #
-# ================================================================
+# ==========================================================================
 
 #==============
 # Includes
@@ -350,6 +357,10 @@ Now that we've examined the Makefiles,  we will make little mention of them
 in the rest of this document (except for the example where we discuss the
 C foreign function interface where we will show how Sail can call C functions).
 
+=== "Hello, World" and the Sail interactive interpretter
+
+TBD
+
 == Data types
 === effect annotations
 === Integers
@@ -374,6 +385,172 @@ What does " 'n " mean?
 
 == Execution
 === Functions
+
+
+
+
+[#my_replicate_bits]
+=== The ``my_replicate_bits()`` function from the Sail manual (Bill)
+
+First,  let's look at the code that is described in the Sail manual for the function, my_replicate_bits().
+
+Note:
+The following code actually comes from the file doc/examples/my_replicate_bits.sail.  It is a little bit different than what is shown in the manual for reasons that will be covered here.
+
+[source, sail]
+----
+//default Order dec         // billmc
+
+
+$include <prelude.sail>
+
+// billmc
+$include "my_replicate_bits_function_signatures.sail"
+
+infixl 7 <<
+infixl 7 >>
+
+val operator << = "shiftl" : forall 'm. (bits('m), int) -> bits('m)
+val "shiftl" : forall 'm. (bits('m), int) -> bits('m)
+
+val operator >> = {
+  ocaml: "shiftr_ocaml",
+  c: "shiftr_c",
+  lem: "shiftr_lem",
+  _: "shiftr"
+} : forall 'm. (bits('m), int) -> bits('m)
+
+//val "or_vec" : forall 'n. (bits('n), bits('n)) -> bits('n)
+val or_vec = {c: "or_bits" } : forall 'n. (bits('n), bits('n)) -> bits('n)      // billmc
+
+val zero_extend = "zero_extend" : forall 'n 'm, 'm >= 'n. (bits('n), atom('m)) -> bits('m)
+
+overload operator | = {or_vec}
+
+//val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)     // billmc
+
+val zeros = "zeros" : forall 'n. atom('n) -> bits('n)
+
+function my_replicate_bits(n, xs) = {
+  ys = zeros(n * length(xs));
+  foreach (i from 1 to n) {
+    ys = ys << length(xs);
+    ys = ys | zero_extend(xs, length(ys))
+  };
+  ys
+}
+
+val my_replicate_bits_2 : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+
+function my_replicate_bits_2(n, xs) = {
+  ys = zeros('n * 'm);
+  foreach (i from 1 to n) {
+    ys = (ys << 'm) | zero_extend(xs, 'n * 'm)
+  };
+  ys
+}
+
+val cast extz : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+
+function extz(m, xs) = zero_extend(xs, m)
+
+val my_replicate_bits_3 : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+
+function my_replicate_bits_3(n, xs) = {
+  ys = zeros('n * 'm);
+  foreach (i from 1 to n) ys = ys << 'm | xs;
+  ys
+}
+----
+
+You will see in this code,  that there is no 'main' function,  and as such, will not compile into a C Sail model.  You will get the following error message:
+
+TODO: get the error message.
+
+In order to get this to compile into a C Sail model,  you will need to provide a main function.  The following code shows the implementation of a ``main()`` function that calls my_replicate bits().
+
+[source, sail]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    main.sail
+//
+// Description: Example sail file
+//
+// Author(s):   Bill McSpadden (bill@riscv.sail)
+//
+// Revision:    See revision control log
+// ============================================================================
+
+default Order dec
+$include <prelude.sail>
+
+val "print" : string -> unit
+
+//val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+$include "my_replicate_bits_function_signatures.sail"
+
+
+val main : unit -> unit
+function main() = 
+    {
+    v1 : bits(8)  = 0x55;
+    v2 : bits(32) = 0x00000000;
+
+    // Sail has a powerful type-checking system,  but understanding it
+    //  is best learned by examining some examples.
+
+//    num : int = 4;            // CE
+//    let num : int(4) = 4;     // Works
+//    let num : int(4) = 5;     // CE
+//    let num : int(5) = 5;     
+//    let num : int(4) = 3;     // CE
+    let num : int(4) = 3 + 1;
+
+    print("calling my_replicate_bits() .....\n");
+
+    // The compiler needs to evaluate 
+//    v2 = my_replicate_bits (num, v1);
+    v3 : bits(32) = my_replicate_bits (num, v1);
+//    v3 : bits(32) = my_replicate_bits (4, v1);
+
+    print_bits("replicated bits: ", v3);
+
+    print("returned from my_replicate_bits() .....\n");
+    }
+
+
+----
+
+Because both the files, my_replicate_bits.sail and main.sail, need to have the function signatures in order to compile (and we want them to be consistent),  the function signatures have been put into a seperate file that is include by both.  Here is the function signature file, my_replicate_bits_function_signatures.sail:
+
+[source, sail]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    my_replicate_bvits_function_signatures.sail
+//
+// Description: 
+//
+// Author(s):   Bill McSpadden (bill@riscv.org)
+//
+// Revision:    See revision control log
+// ============================================================================
+
+$include <prelude.sail>
+
+val "print" : string -> unit
+
+val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+
+val main : unit -> unit
+
+
+
+
+----
+
+
 === Control flow
 === Iteration
 - for
@@ -401,3 +578,49 @@ of many support functions.
 == Formal tools that analyze Sail source code
 
 coverage
+
+== FAQs (Frequently Asked Questions)
+
+Following are a set of FAQs that were generated via set of questions to the Sail developers.
+
+== Frequently Asked Questions about the Sail RISC-V Golden Model
+
+- [Q: Is there support for multi-HART or multi-Core simulation?](#is-there-support-for-multi-hart-multi-core-simulation)
+- [Q: What is the meaning of life, the universe and everything?](#q-what-is-the-meaning-of-life-the-universe-and-everything)
+- [Q: What does the answer to "What is the meaning of life, the universe and everything" mean?](#q-what-does-the-answer-to-"what-is-the-meaning-of-life-the-universe-and-everything"-mean)
+
+
+=== Q: Is there support for multi-HART or multi-Core simulation?
+
+A: There is no inherent support for multi-HART or multi-Core within the existing RISC-V Sail model.
+There are future plans for adding this kind of simulation.  It is needed in order to simulate
+(in a meaningful way) the atomic memory operations and to evaluate memory consistency
+and coherency.
+
+//  The following is from email between Bill McSpadden and Martin Berger
+//  Subject: RISC-V Sail model questions, round 1: Multi-core, MTIMER, MMIO, main loop
+//  Date: Feb 15, 2022, 7:20AM
+
+The model isn't directly about testing. Testing is a separate
+activity. The point of the model is to be as clear as possible. and we
+should keep testing and the model separate.
+
+=== Q: What are .ml files?  What are their purpose?
+
+A: These are OCaml files. They are to the ocaml emulator what the .c
+files are to the c emulator. I question the need for an OCaml emulator
+,see also https://github.com/riscv/sail-riscv/issues/138
+
+## Q:
+
+
+// The following is some sample questions based on HGttG,Hitchhikers Guide to the Galax
+
+=== Q: What is the meaning of life, the universe and everything?
+
+A: 42
+
+=== Q: What does the answer to "What is the meaning of life, the universe and everything" mean?
+
+A: One must construct an experimental, organic computer to compute the meaning.
+Project 'Earth' is one such computer.  Timeframe for an expected answer is... soon.
