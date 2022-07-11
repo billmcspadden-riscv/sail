@@ -362,6 +362,53 @@ include::../functional_code_snippets/list_iteration/test.sail[]
 
 === match
 
+== Interaction between C and Sail
+
+**Can we call Sail functions in the C model?**
+
+Short answer: yes!
+
+In more detail, every Sail function will show up with a predictable name in the generated C (with one caveat). For example, if have the following Sail code:
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_names_in_c/example.sail[]
+
+----
+
+then we get the following C code (abbreviated).
+
+[source, c]
+----
+include::../functional_code_snippets/sail_names_in_c/example1.c[]
+----
+
+for `giraffe1` (and likewise for 'giraffe3'). Note that the  code for `giraffe2` is simply this:
+
+[source, c]
+----
+include::../functional_code_snippets/sail_names_in_c/example2.c[]
+
+----
+
+So giraffe1 becomes `zgiraffe1`, `giraffe2` becomes `zgiraffe2`` and so on. If we only provide a
+Sail declaration but no corresponding Sail implementation (as we do for `giraffe2`, we only get a C declaration. OTOH, 
+if we only provide a Sail function but no separate 
+Sail header, as we do for `giraffe3`,
+we still get a C implementation and a separate prototype.
+
+Note that all the `zgiraffe*` functions are global and can be called from C. This is done for example in the RISCV model, where the Sail functions 
+
+- `tick_platform` https://github.com/riscv/sail-riscv/blob/master/model/riscv_platform.sail#L495
+- `tick_clock` https://github.com/riscv/sail-riscv/blob/master/model/riscv_platform.sail#L319
+
+are explicitly called in the handwritten C function
+
+https://github.com/riscv/sail-riscv/blob/master/c_emulator/riscv_sim.c#L935-L936
+
+**Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code.
+
+
 == Other stuff
 
 ===  __FILE__ , __LINE__ , __LOC__
