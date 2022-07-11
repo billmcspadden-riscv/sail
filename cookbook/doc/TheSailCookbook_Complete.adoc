@@ -41,14 +41,15 @@ all the programming examples found in this document.
 Sail is a programming language that was developed for the purpose
 of clearly, concisely and completely describing a computer's
 Instruction Set Architecture (ISA).  This includes...
+
 - specifying the opcodes/instructions and their behaviours
 - specifying the general purpose registers
 - specifying the control space registers
 
-Sail was the language chosen by RISC-V International to formally
-specify the RISC-V open source
-ISA.  This docuement,  while not RISC-V specific,  is especially targeted for engineers who are working on specifying the RISC-V
-ISA.
+Sail was the language chosen by RISC-V International
+to formally specify the RISC-V open source ISA.
+
+This document,  while not RISC-V specific,  is especially targeted for engineers who are working on specifying the RISC-V ISA.
 
 This cookbook is intended to supply the beginning Sail programmer with
 some simple, well-commented, bite-size program fragments that can
@@ -152,27 +153,39 @@ Are there other OS platforms that should be supported?
 Other Linux distis?  Or will Docker support?
 
 == Basic description
-=== what sail is
-- sequential model only
-- non-parallel
+=== What Sail is
+Sail is a programming language that is targetted for
+ specifying an ISA.  Once specified, a set of
+instructions (usually found in a .elf file) can then
+be executed on the "model" and the results observed.
 
-=== what sail is not
-- not a RTL language, etc
-- Sail does not support any parallelism.  No threads.  No event sequences.  No clocking.
+The model is a sequential model only;  at this time,
+there are no semantics allowing for any type of parallel
+execution.
+
+=== What sail is not
+Sail is not an RTL (Register Transfer Language).
+There is no direct support for timing (as in clock
+timing) and there is no support for parallel execution,
+all things that an RTL contains.
 
 === version management and what to expect
+TBD
 
 [#hello_world]
 == “Hello, World” example program (Bill)
-All example programs associated with this cookbook, can be found
-in <sail_git_root>/cookbook/functional_code_snippets/
+All example programs associated with this cookbook,
+can be found in
+<sail_git_root>/cookbook/functional_code_snippets/
 
-The purpose of this simple program is to show some of the basics
-of Sail and to ensure that you have the Sail compiler (and the other
-required tools) installed in your environment.
+The purpose of this simple program is to show some
+of the basics of Sail and to ensure that you have
+the Sail compiler (and the other required tools)
+ installed in your environment.
 
-It is assumed that you have built the sail compiler in the local
-area. The Makefiles in the coding examples depend on this.
+It is assumed that you have built the sail compiler
+in the local area. The Makefiles in the coding
+examples depend on this.
 
 The following code snippet comes from:
 
@@ -232,20 +245,26 @@ function main() =
 
 ----
 
-So... that's the code we want to compile.  But how do we compile it?
-Remember, we want to use the sail compiler that was built in this
-sandbox.  We use a 'make' methodology for building.  The first Makefile
-(in the same directory as the example code example) is very simple.
-It includes a generic Makefile (../Makefile.generic) that is used
-for building most of the program examples.
+So... that's the code we want to compile.  But how do
+we compile it? Remember, we want to use the sail
+compiler that was built in this sandbox.  We use a
+'make' methodology for building.  The first Makefile
+(in the same directory as the example code example)
+is very simple.  It includes a generic Makefile
+(../Makefile.generic) that is used for building
+most of the program examples.
 
 
-[Note]  If you want to create and contribute your own example program
-and you need to deviate from our make methodolgy,  you would do that
-in your own test directory by writing your own Makefile.
+[Note]  If you want to create and contribute your
+own example program and you need to deviate from
+our make methodolgy,  you would do that in your
+own test directory by writing your own Makefile.
 
-The basic flow is: +
-*.sail  --(Sail)--> out.c, *.c --(gcc)--> executable
+The basic flow for building is:
+
+. Write *.sail
+. sail -c *.sail -o out.c
+. gcc <flags> *.c --> executable
 
 
 Makefile:
@@ -271,7 +290,6 @@ Makefile:
 include ../Makefile.generic
 
 ----
-
 
 Makefile.generic is the Makefile that does the work for compilation.
 It depends on a local compilation of sail. See the [Installation](#sail-installation)
@@ -424,7 +442,10 @@ What does " 'n " mean?
 First,  let's look at the code that is described in the Sail manual for the function, my_replicate_bits().
 
 Note:
-The following code actually comes from the file doc/examples/my_replicate_bits.sail.  It is a little bit different than what is shown in the manual for reasons that will be covered here.
+The following code actually comes from the file
+doc/examples/my_replicate_bits.sail.  It is a little
+bit different than what is shown in the manual
+for reasons that will be covered later.
 
 [source, sail]
 ----
@@ -502,11 +523,16 @@ function my_replicate_bits_2(n, xs) = {
 //}
 ----
 
-You will see in this code,  that there is no 'main' function,  and as such, will not compile into a C Sail model.  You will get the following error message:
+You will see in this code,  that there is no 'main'
+function,  and as such, will not compile into a C Sail
+model.  You will get the following error message:
 
 TODO: get the error message.
 
-In order to get this to compile into a C Sail model,  you will need to provide a main function.  The following code shows the implementation of a ``main()`` function that calls my_replicate bits().
+In order to get this to compile into a C Sail model,
+you will need to provide a main function.  The
+following code shows the implementation of a
+``main()`` function that calls my_replicate bits().
 
 [source, sail]
 ----
@@ -561,7 +587,12 @@ function main() =
 
 ----
 
-Because both the files, my_replicate_bits.sail and main.sail, need to have the function signatures in order to compile (and we want them to be consistent),  the function signatures have been put into a seperate file that is include by both.  Here is the function signature file, my_replicate_bits_function_signatures.sail:
+Because both the files, my_replicate_bits.sail and
+main.sail, need to have the function signatures in
+order to compile (and we want them to be consistent),
+the function signatures have been put into a seperate
+file that is include by both.  Here is the function
+signature file, my_replicate_bits_function_signatures.sail:
 
 [source, sail]
 ----
@@ -591,13 +622,21 @@ val main : unit -> unit
 
 
 == Control flow
-=== Iteration
-- for
-- while
-- lamba function
+
+[#for_loop_example]
+=== for loops (TBD)
+
+[#while_loop_example]
+=== while loops (TBD)
+
+[#foreach_example]
+=== foreach (TBD)
+
+[#repeat_eaxmple]
+=== repeat (TBD)
 
 [#list_iteration_example]
-=== List iteration example
+=== List iteration example (Bill)
 
 [source, sail]
 ----
@@ -681,7 +720,6 @@ function sbox_lookup(x, table) =
         }
     }
 
-
 val main : unit -> unit
 function main() = 
     {
@@ -695,11 +733,18 @@ function main() =
 
 ----
 
-=== matches
+=== match
 
 == Other stuff
 
 ===  __FILE__ , __LINE__ , __LOC__
+
+=== Variable argument list support
+
+What support does Sail have for a variable argument
+list for its functions?
+
+TBD
 
 == Description prelude.sail
 

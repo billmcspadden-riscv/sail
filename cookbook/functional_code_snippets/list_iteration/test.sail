@@ -78,7 +78,6 @@ function sbox_lookup(x, table) =
         }
     }
 
-
 val main : unit -> unit
 function main() = 
     {
