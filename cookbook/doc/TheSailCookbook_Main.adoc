@@ -13,6 +13,8 @@ William C. McSpadden <bill@riscv.org>; Martin Berger <contact@martinfriedrichber
 // Need some preamble to get TOC
 {empty}
 
+
+[#list_of_programming_examples]
 == List of programming examples (in increasing complexity)
 
 The main purpose of this document,  is to give the user a quick 
@@ -22,6 +24,11 @@ all the programming examples found in this document.
 <<hello_world>>
 
 <<my_replicate_bits>>
+
+<<list_iteration_example>>
+
+<<simple_cpu_example>>
+
 
 
 
@@ -70,20 +77,33 @@ examples.  That is the purpose of *this* document.
 
 == How to contribute (Bill)
 
+We are hopeful that as you learn the Sail programming language,  that you too would want to create some code snippets that you think someone might find helpful.
 
-=== pull requests (Bill)
+The simple "hello world" program (found in cookbook/functional_code_snippets/hello_world/) provides a template for writing a new code snippet. For an example 
+that lives in a single Sail file, this should be sufficient.  Create a test directory (with a useful name), copy the Makefile and the .sail file into that directory,  and then write your code.  And finally,
+edit this .adoc file and give a description of what
+the example file is intended to do.
 
-=== RISC-V working groups (Bill)
+Once you have completed your snippet and verifies that it works,  you should make an entry in this document.  Pleas see <<hello_world>> to see how you should include your snippet in this document.  You should at least include the .sail file and give a brief descritpion.  Also, please make an entry in 
+<<list_of_programming_examples>> for quick perusal by readers.
 
-=== style and contribution guide
 
-=== brevity
+=== Coding and indentation style
 
-=== short executable
+We do not have a preferred coding style for these little code snippets.  With regards to indentation style,  the RISC-V modle follows a vaguely K&R style. Some of the program snippets (those originating with Bill McSpadden) follow the Whitesmiths indentation style.  All styles are welcome.
 
-=== standalone
+For a list and description of popular indentation styles, steer your browser to...
+https://en.wikipedia.org/wiki/Indentation_style.
 
-=== maintainership (when something breaks)
+=== Brevity
+
+Program examples should be short, both in terms of number-of-lines and in terms of execution time.  Each example should focus on one simple item.  And the execution of the example item should be clear.  The example should be short, standalone and easy to maintain.
+
+Now,  we do have one example in this Cookbook that somewhat violates this request.  The programming example, <<simple_cpu_exampl>>,  is more complex.  But it is meant to demonstrate the usefulness of Sail in defining the functionality of an ISA.
+
+=== Maintainership (when something breaks)
+
+We would also ask that if you contribute a code example,  that you would maintain it.
 
 === Syntax highlighting for Sail
 
@@ -96,7 +116,10 @@ It is beyond the scope of this document to describe how to use
 the syntax highlighting for the various editors.
 
 == Sail installation
-=== Docker
+
+Sail is supported on a number of different platforms.  MacOs and Lunix/Ubuntu seem to be the most used platforms.  
+
+
 
 TBD
 
@@ -107,6 +130,10 @@ TBD
 === MacOS (Martin)
 
 TBD
+
+=== Docker
+
+Docker is used as a ....
 
 === Windows 
 Support of a native command line interface is not planned.  If you
@@ -188,7 +215,7 @@ Makefile.generic is the Makefile that does the work for compilation.
 It depends on a local compilation of sail. See the [Installation](#sail-installation)
 section to understand how to install in the tools for your platform.
 
-Makefile:
+Makefile.generic:
 
 [source, makefile]
 ----
@@ -279,11 +306,20 @@ include::../functional_code_snippets/sail_manual_example_my_replicate_bits/my_re
 ----
 
 
-=== Control flow
+== Control flow
 === Iteration 
 - for
 - while
 - lamba function
+
+[#list_iteration_example]
+=== List iteration example
+
+[source, sail]
+----
+include::../functional_code_snippets/list_iteration/test.sail[]
+
+----
 
 === matches
 
@@ -299,7 +335,8 @@ of many support functions.
 === description of print, sext, equility etc.  standard template stuff
 === the C interface
 
-== CPU example
+[#simple_cpu_example]
+== Simple CPU example (Martin)
 - From nand2tetris
 
 
