@@ -32,7 +32,8 @@ function main() =
         8 => print (" test a: 8\n"),
         9 => print (" test a: 9\n"),
         _ => print (" test a: no match\n")
-        };                  // Needs semicolon.  Why?
+        };                  // Needs semicolon.  Why?  What is the syntactic
+                            // purpose of the semicolon? 
 
 
 
