@@ -422,7 +422,21 @@ results in the following C snippet:
 include::../functional_code_snippets/sail_names_in_c/result-overloading.c[]
 ----
 
-**Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code.
+Scattered definitions (typically used in the decode and execute clauses) might be seen as a form of overloading. Here is an example of a definition of `execute``:
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_names_in_c/example-execute.sail[]
+----
+
+Here the generated C will contain a single function `zexecute` that does a big `case`-distinction that dispatches to the relevant parts of the scattered definition:
+
+[source, c]
+----
+include::../functional_code_snippets/sail_names_in_c/result-execute.c[]
+----
+
+**Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code. 
 
 
 
