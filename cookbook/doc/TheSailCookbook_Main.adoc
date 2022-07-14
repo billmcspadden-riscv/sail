@@ -406,7 +406,25 @@ are explicitly called in the handwritten C function
 
 https://github.com/riscv/sail-riscv/blob/master/c_emulator/riscv_sim.c#L935-L936
 
+Note that if you overload a functions `f1`, ..., `fn` to a new funtion `f` and then
+call `f` in the Sail code, the generated C will not use `zf` but rather the appropriate `zfi`. For example
+
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_names_in_c/example-overloading.sail[]
+----
+
+results in the following C snippet:
+
+[source, c]
+----
+include::../functional_code_snippets/sail_names_in_c/result-overloading.c[]
+----
+
 **Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code.
+
+
 
 
 == Other stuff
