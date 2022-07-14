@@ -17,10 +17,6 @@ default Order dec
 
 $include <prelude.sail>
 
-//val not_bit : bit -> bit
-//function not_bit(b) = if b == bitone then bitzero else bitone
-//overload ~ = {not_bool, not_vec, not_bit}
-
 overload operator - = sub_bits
 
 val not_vec = {c: "not_bits", _: "not_vec"} : forall 'n. bits('n) -> bits('n)
@@ -77,17 +73,10 @@ function sbox_lookup(x, table) =
     {
     match (x, table) 
         {
-//        (0x00, t0::tn) => t0,
-//        (   y, t0::tn) => sbox_lookup(x - 0x01, tn)
         (0x00, head::tail) => head,
         (   y, head::tail) => sbox_lookup(x - 0x01, tail)
-//        (   y, t0::tn) => sbox_lookup(x , tn)
         }
     }
-
-
-
-
 
 val main : unit -> unit
 function main() = 

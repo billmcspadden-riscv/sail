@@ -4,9 +4,9 @@
 //
 // Description: Example sail file
 //
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+// Author(s):   Bill McSpadden (bill@riscv.org)
 //
-// Revision:    See revision control log
+// Revision:    See git history
 // ============================================================================
 
 default Order dec

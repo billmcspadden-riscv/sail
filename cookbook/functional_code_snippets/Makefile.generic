@@ -1,25 +1,31 @@
 # vim: set tabstop=4 shiftwidth=4 noexpandtab
-# ================================================================
+# ==========================================================================
 # Filename:		Makefile
 #
-# Description:	Makefile for building.....
+# Description:	Makefile for building Sail example code fragments
 #
-# Author(s):	Bill McSpadden (william.c.mcspadden@gmail.com)
+#				NOTE: in order to render this file in an asciidoc
+#				for the Sail cookbook, keep the line length less 
+#				then 86 characters, the width of the block comment line
+#				of this section
+#
+# Author(s):	Bill McSpadden (bill@riscv.org)
 #
 # Revision:		See revision control log 
 #
-# ================================================================
-
+# ==========================================================================
 
 #==============
 # Includes
 #==============
 
-
-
 #==============
 # Make variables
 #==============
+
+# The sail compiler expects that SAIL_DIR is set in the environment.
+#	The sh env var, SAIL_DIR,  is set and exported using the make
+#	variable, SAIL_DIR.  I hope this is not too confusing.
 SAIL_DIR		:= ../../..
 SAIL_LIB		:= ${SAIL_DIR}/lib/sail
 SAIL			:= ${SAIL_DIR}/sail
@@ -29,9 +35,16 @@ SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
 SAIL_SRC		:= $(wildcard *.sail)
 
 CC				:= gcc
-CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
-C_SRC			:= out.c ${SAIL_DIR}/lib/*.c
+CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
 
+# out.c is the file that sail generates as output from the
+#   sail compilation process.  It will be compiled with
+#   other C code to generate an executable
+# ${SAIL_DIR}/lib/*.c is a set of C code used for interaction
+#   with the programming environment.  It also provides 
+#   functionality that cannot be natively supported by sail.
+#   
+C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
 
 TARGET			:= out
 
@@ -41,28 +54,23 @@ TARGET			:= out
 
 all: run
 
-
 build: out
-
 
 install:
 
 run: out
 	./out
 
-
 out: out.c
-	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+	gcc ${C_SRC} ${CCFLAGS} -o $@
 
+#	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
 
-#	${CC} ${CCFLAGS} $<
-
+# In the following rule,  the environment variable, SAIL_DIR,  must be
+#	set  in order for the sail compilation step to work correctly.
 out.c: ${SAIL_SRC}
 	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
 	${SAIL} ${SAIL_FLAGS} ${SAIL_SRC}
-
-
-
 
 # clean:  cleans only local artifacts
 clean:

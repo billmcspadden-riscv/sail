@@ -21,14 +21,14 @@ DEBUG_FLAGS		:= -g
 #==============
 # Make variables
 #==============
-SAIL_PATH 		:= /home/billmc/.opam/default
-SAIL_BIN		:= ${SAIL_PATH}/bin
-SAIL_LIB		:= ${SAIL_PATH}/lib/sail
-SAIL			:= ${SAIL_BIN}/sail
-SAIL_OUTFILE	:= out
-SAIL2C_INC		:= -c_include cfunc.h
-#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE} 
-SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE} 
+#SAIL_PATH 		:= /home/billmc/.opam/default
+#SAIL_BIN		:= ${SAIL_PATH}/bin
+#SAIL_LIB		:= ${SAIL_PATH}/lib/sail
+#SAIL			:= ${SAIL_BIN}/sail
+#SAIL_OUTFILE	:= out
+#SAIL2C_INC		:= -c_include cfunc.h
+##SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE} 
+#SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE} 
 
 # TODO:  fix this.  Need to find an installation home for these C files.
 # 		Perhaps compile a library?
@@ -39,9 +39,10 @@ SAIL_DIR		:= ../../..
 SAIL_LIB		:= ${SAIL_DIR}/lib/sail
 SAIL			:= ${SAIL_DIR}/sail
 SAIL_OUTFILE	:= out
-#SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
+SAIL2C_INC		:= -c_include cfunc.h
 
 SAIL_SRC		:= $(wildcard *.sail)
+SAIL_FLAGS		:= ${SAIL2C_INC} -c -o ${SAIL_OUTFILE} 
 
 
 CC				:= gcc
