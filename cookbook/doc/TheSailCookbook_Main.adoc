@@ -473,5 +473,7 @@ coverage
 
 Following are a set of FAQs that were generated via set of questions to the Sail developers.
 
-include::./FAQ_RISCV_model.adoc[]
+include::./Sail_FAQ.adoc[]
+
+include::./RISCV_model_FAQ.adoc[]
 
