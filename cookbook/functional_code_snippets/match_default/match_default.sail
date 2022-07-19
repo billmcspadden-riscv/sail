@@ -35,8 +35,6 @@ function main() =
         };                  // Needs semicolon.  Why?  What is the syntactic
                             // purpose of the semicolon? 
 
-
-
     print("end of test\n");
     }
 
