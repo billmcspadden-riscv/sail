@@ -212,8 +212,8 @@ hello_world.sail:
 
 // Whitespace is NOT significant. Yay!
 
-default Order dec   // Required. Defines whether bit vectors are increasing 
-                    // (inc) (MSB is index 0; AKA big-endian) or decreasing 
+default Order dec   // Required. Defines whether bit vectors are increasing
+                    // (inc) (MSB is index 0; AKA big-endian) or decreasing
                     // (dec) (LSB is index 0; AKA little-endian)
 
 // The $include directive is used to pull in other Sail code.
@@ -237,7 +237,7 @@ val main : unit -> unit
 // ========================================================
 // The entry point into the program starts at the function, main.
 // ========================================================
-function main() = 
+function main() =
     {
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
@@ -279,7 +279,7 @@ Makefile:
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log 
+# Revision:		See revision control log
 #
 # ================================================================
 
@@ -306,13 +306,13 @@ Makefile.generic:
 # Description:	Makefile for building Sail example code fragments
 #
 #				NOTE: in order to render this file in an asciidoc
-#				for the Sail cookbook, keep the line length less 
+#				for the Sail cookbook, keep the line length less
 #				then 86 characters, the width of the block comment line
 #				of this section
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log 
+# Revision:		See revision control log
 #
 # ==========================================================================
 
@@ -342,10 +342,10 @@ CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
 #   sail compilation process.  It will be compiled with
 #   other C code to generate an executable
 # ${SAIL_DIR}/lib/*.c is a set of C code used for interaction
-#   with the programming environment.  It also provides 
+#   with the programming environment.  It also provides
 #   functionality that cannot be natively supported by sail.
-#   
-C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
+#
+C_SRC			:= out.c ${SAIL_DIR}/lib/*.c
 
 TARGET			:= out
 
@@ -500,14 +500,14 @@ function my_replicate_bits_2(n, xs) = {
   ys
 }
 
-// The following comment is of interest for reasons other than 
+// The following comment is of interest for reasons other than
 //  functionality.  The Sail syntax is still being developed.
 //  Attention should be paid to the issues reported to the Sail
 //  team (via github) and when releases are made (again via github).
 
 // The following is deprecated per Alasdair Armstrong:
-//  I would just remove that example as the cast feature is now 
-//  deprecated in the latest version (and the risc-v model has 
+//  I would just remove that example as the cast feature is now
+//  deprecated in the latest version (and the risc-v model has
 //  always used a flag fully disabling it anyway)
 
 // val cast extz : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
@@ -557,7 +557,7 @@ $include "my_replicate_bits_function_signatures.sail"
 
 
 val main : unit -> unit
-function main() = 
+function main() =
     {
     v1 : bits(8)  = 0x55;
     v2 : bits(32) = 0x00000000;
@@ -568,13 +568,13 @@ function main() =
 //    num : int = 4;            // CE
 //    let num : int(4) = 4;     // Works
 //    let num : int(4) = 5;     // CE
-//    let num : int(5) = 5;     
+//    let num : int(5) = 5;
 //    let num : int(4) = 3;     // CE
     let num : int(4) = 3 + 1;
 
     print("calling my_replicate_bits() .....\n");
 
-    // The compiler needs to evaluate 
+    // The compiler needs to evaluate
 //    v2 = my_replicate_bits (num, v1);
     v3 : bits(32) = my_replicate_bits (num, v1);
 //    v3 : bits(32) = my_replicate_bits (4, v1);
@@ -600,7 +600,7 @@ signature file, my_replicate_bits_function_signatures.sail:
 // ============================================================================
 // Filename:    my_replicate_bvits_function_signatures.sail
 //
-// Description: 
+// Description:
 //
 // Author(s):   Bill McSpadden (bill@riscv.org)
 //
@@ -663,45 +663,45 @@ overload operator - = sub_bits
 
 val not_vec = {c: "not_bits", _: "not_vec"} : forall 'n. bits('n) -> bits('n)
 
-let aes_sbox_inv_table : list(bits(8)) = 
+let aes_sbox_inv_table : list(bits(8)) =
     [|
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
-    0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb, 
-    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 
-    0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb, 
+    0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87,
+    0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
 
-    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 
-    0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e, 
-    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 
-    0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25, 
+    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d,
+    0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2,
+    0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
 
     0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16,
-    0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92, 
-    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 
-    0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84, 
+    0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
+    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
+    0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
 
     0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a,
-    0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06, 
-    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 
+    0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
+    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02,
     0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
 
-    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 
-    0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73, 
-    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 
-    0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e, 
+    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea,
+    0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85,
+    0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
 
-    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 
-    0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b, 
+    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89,
+    0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
     0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20,
-    0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4, 
+    0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
 
-    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 
+    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31,
     0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
-    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 
-    0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef, 
+    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d,
+    0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
 
-    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 
-    0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61, 
+    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0,
+    0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26,
     0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
     |]
@@ -711,9 +711,9 @@ let aes_sbox_inv_table : list(bits(8)) =
 // x'th element of that list.
 
 val sbox_lookup : (bits(8), list(bits(8))) -> bits(8)
-function sbox_lookup(x, table) = 
+function sbox_lookup(x, table) =
     {
-    match (x, table) 
+    match (x, table)
         {
         (0x00, head::tail) => head,
         (   y, head::tail) => sbox_lookup(x - 0x01, tail)
@@ -721,10 +721,10 @@ function sbox_lookup(x, table) =
     }
 
 val main : unit -> unit
-function main() = 
+function main() =
     {
     let x : bits(8) = 0x03;
-    
+
     print_bits("lookup results: ", sbox_lookup(x, aes_sbox_inv_table));
 
     }
@@ -734,6 +734,193 @@ function main() =
 ----
 
 === match
+
+== Interaction between C and Sail
+
+**Can we call Sail functions in the C model?**
+
+Short answer: yes!
+
+In more detail, every Sail function will show up with a predictable name in the generated C (with one caveat). For example, if have the following Sail code:
+
+[source, sail]
+----
+default Order dec
+$include <prelude.sail>
+
+val giraffe1 : unit -> int
+function giraffe1 ()  = {
+	 return 1
+}
+
+val giraffe2 : unit -> int
+
+function giraffe3 () -> int = {
+	 return 3
+}
+
+val giraffe4 : unit -> int
+function giraffe4 () = {
+	 return 4
+}
+
+
+val main : unit -> int effect {rreg, wreg}
+function main () = {
+    let x1 = giraffe1() in
+    let x2 = giraffe2() in
+    let x3 = giraffe3() in
+	return 7
+
+}
+
+
+
+
+----
+
+then we get the following C code (abbreviated).
+
+[source, c]
+----
+void zgiraffe1(sail_int *rop, unit);
+
+void zgiraffe1(sail_int *zcbz30, unit zgsz30)
+{
+   ...
+}
+----
+
+for `giraffe1` (and likewise for 'giraffe3'). Note that the  code for `giraffe2` is simply this:
+
+[source, c]
+----
+void zgiraffe2(sail_int *rop, unit);
+
+----
+
+So giraffe1 becomes `zgiraffe1`, `giraffe2` becomes `zgiraffe2`` and so on. If we only provide a
+Sail declaration but no corresponding Sail implementation (as we do for `giraffe2`, we only get a C declaration. OTOH,
+if we only provide a Sail function but no separate
+Sail header, as we do for `giraffe3`,
+we still get a C implementation and a separate prototype.
+
+Note that all the `zgiraffe*` functions are global and can be called from C. This is done for example in the RISCV model, where the Sail functions
+
+- `tick_platform` https://github.com/riscv/sail-riscv/blob/master/model/riscv_platform.sail#L495
+- `tick_clock` https://github.com/riscv/sail-riscv/blob/master/model/riscv_platform.sail#L319
+
+are explicitly called in the handwritten C function
+
+https://github.com/riscv/sail-riscv/blob/master/c_emulator/riscv_sim.c#L935-L936
+
+Note that if you overload a functions `f1`, ..., `fn` to a new funtion `f` and then
+call `f` in the Sail code, the generated C will not use `zf` but rather the appropriate `zfi`. For example
+
+
+[source, sail]
+----
+default Order dec
+$include <prelude.sail>
+
+val giraffe1 : unit -> int
+function giraffe1 ()  = {
+	 return 1
+}
+
+function giraffe2 ( n : int ) -> int = {
+	 return n
+}
+
+overload giraffe = { giraffe1, giraffe2 }
+
+val main : unit -> int effect {rreg, wreg}
+function main () = {
+    let x1 = giraffe() in
+    let x2 = giraffe( 17 ) in
+	return x2
+
+}
+
+
+
+----
+
+results in the following C snippet:
+
+[source, c]
+----
+void zgiraffe1(sail_int *rop, unit);
+void zgiraffe1(sail_int *zcbz30, unit zgsz30) { ... }
+
+void zgiraffe2(sail_int *rop, sail_int);
+void zgiraffe2(sail_int *zcbz31, sail_int zn) { ... }
+
+void zmain(sail_int *zcbz32, unit zgsz32)
+{
+  ...
+  zgiraffe1(&zx1, UNIT);
+  ...
+    zgiraffe2(&zx2, zgsz33);
+  ...
+}
+----
+
+Scattered definitions (typically used in the decode and execute clauses) might be seen as a form of overloading. Here is an example of a definition of `execute``:
+
+[source, sail]
+----
+default Order dec
+$include <prelude.sail>
+
+
+scattered union ast
+val execute : ast -> int
+
+union clause ast = ITYPE : int
+function clause execute ITYPE(i) = { return 17 }
+
+union clause ast = BTYPE : bool
+function clause execute BTYPE(b) = { return 19 }
+
+union clause ast = RTYPE : real
+function clause execute BTYPE(r) = { return 23 }
+
+union clause ast = BVTYPE : bits(32)
+function clause execute BTYPE(bv) = { return 29 }
+
+end execute
+end ast
+----
+
+Here the generated C will contain a single function `zexecute` that does a big `case`-distinction that dispatches to the relevant parts of the scattered definition:
+
+[source, c]
+----
+void zexecute(sail_int *rop, struct zast);
+
+void zexecute(sail_int *zcbz30, struct zast zmergez3var)
+{
+    ...
+    if (zmergez3var.kind != Kind_zITYPE) goto case_2;
+    ...
+    CONVERT_OF(sail_int, mach_int)(&zgsz31, INT64_C(17));
+    ...
+case_2:
+    ...
+    CONVERT_OF(sail_int, mach_int)(&zgsz33, INT64_C(19));
+    ...
+case_3:
+    ...
+    CONVERT_OF(sail_int, mach_int)(&zgsz35, INT64_C(23));
+   ...
+}
+----
+
+**Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code.
+
+
+
 
 == Other stuff
 
@@ -767,44 +954,159 @@ coverage
 
 Following are a set of FAQs that were generated via set of questions to the Sail developers.
 
-== Frequently Asked Questions about the Sail RISC-V Golden Model
+=== Frequently Asked Questions about the Sail Programming Language
 
-- [Q: Is there support for multi-HART or multi-Core simulation?](#is-there-support-for-multi-hart-multi-core-simulation)
-- [Q: What is the meaning of life, the universe and everything?](#q-what-is-the-meaning-of-life-the-universe-and-everything)
-- [Q: What does the answer to "What is the meaning of life, the universe and everything" mean?](#q-what-does-the-answer-to-"what-is-the-meaning-of-life-the-universe-and-everything"-mean)
+<<q-what-are-the-purposes-of-text-constructs-things-like-include-optimize-etc>>
+
+<<q-is-there-a-library-methodology-for-sail>>
+
+<<q-rvfidii-what-is-it>>
+
+<<q__what_does_the_skid_underscore_character_mean_in_Sail>>
+
+<<q-what-does-unit-mean-in-Sail-what-is-its-purpose>>
+
+<<q-what-is-the-difference-between-Int-int-integer>>
+
+[#q-what-are-the-purposes-of-text-constructs-things-like-include-optimize-etc]
+==== Q: What are the purposes of "$\<text\>" constructs,  things like $include, $optimize, etc?
+
+A: $<...> runs what might be called the preprocessor (for directives like `$include <prelude.sail>`).
+Note that, unlike C, the Sail preprocessor works (recursively) on Sail ASTs rather than strings.
+Note that such directives that are used are preserved in the AST, so they also function as a useful
+way to pass auxiliary information to the various Sail backends.
+
+Sail also calls those pragmas. Sail has a few pragmas that can be invoked with $..., see
+
+   https://github.com/rems-project/sail/blob/sail2/src/process_file.ml#L164-L181
+
+Pragmas are useful if you want to extend the existing Sail system. We have some extensions in our
+internal version of Sail that are using $...
+
+"$\<text\>" is also called a "splice" because it's used to 'splice' code in.
+
+[#q-is-there-a-library-methodology-for-sail]
+==== Q: Is there a library methodology for Sail?
+
+A: Use $include for common code
+
+Ideally, Sail would support a proper module system. This would be especially useful for a modular architecture like RISCV. Form a pure Sail language perspective, it is not problem adding a well-designed module system (like OCaml's) to Sail. However, it's an open problem how to compile such a module system to Coq (IIRC). It's probably a solvable research question but nobody seems to be working on this. So for the time being, we will have to stay with "$include <...>"
+
+[#q-rvfidii-what-is-it]
+==== Q: RVFI_DII:  What is it?
+
+A: See https://github.com/CTSRD-CHERI/TestRIG/blob/master/RVFI-DII.md
 
 
-=== Q: Is there support for multi-HART or multi-Core simulation?
+[#q__what_does_the_skid_underscore_character_mean_in_Sail]
+==== Q: What does the skid/underscore character, '_',  mean in Sail?
+
+A:  The '_' character is the default pattern match token.
+
+[#q-what-does-unit-mean-in-Sail-what-is-its-purpose]
+==== Q: What does 'unit' mean in Sail?  What is its purpose?
+
+A: (From Alasdair Armstrong) 'unit' is like 'void *' in C.
+
+[#q-what-is-the-difference-between-Int-int-integer]
+==== Q: What is the difference between 'Int', 'int', 'integer'?
+
+A: (per Alisdair Armstrong)  'Int' in the Sail typing system, is a 'kind'.
+A data 'kind' has parametricity. Other data 'kinds' are Type, Order, Bool.
+
+'int' and 'integer' are datatypes.  However, they are not fixed length.
+Sail uses a multiprecision package in order to have varying integer sizes,
+even greater than 64 bits,  or 128 bits.  The compute system provides the
+maximal limit on integer size.
+
+
+
+
+=== Frequently Asked Questions about the Sail RISC-V Golden Model
+
+<<q_is_there_support_for_multi_hart_multi_core_simulation>>
+
+<<q_what_are_ml_files__what_are_their_purpose>>
+
+<<q__is_there_any_support_for_MTIMER>>
+
+<<q__is_the__main_loop__coded_in_Sail>>
+
+<<q-can-gdb-attach-to-the-riscv-golden-model-to-debug-riscv-code>>
+
+<<q__why_two_executables>>
+
+<<q___is_there_support_in_the_model_for_misaligned_memory_accesses>>
+
+<<q-what-is-the-meaning-of-life-the-universe-and-everything>>
+
+<<q-what-does-the-answer-to-what-is-the-meaning-of-life-the-universe-and-everything-mean>>
+
+
+[#q_is_there_support_for_multi_hart_multi_core_simulation]
+==== Q: Is there support for multi-HART or multi-Core simulation?
 
 A: There is no inherent support for multi-HART or multi-Core within the existing RISC-V Sail model.
 There are future plans for adding this kind of simulation.  It is needed in order to simulate
 (in a meaningful way) the atomic memory operations and to evaluate memory consistency
 and coherency.
 
-//  The following is from email between Bill McSpadden and Martin Berger
-//  Subject: RISC-V Sail model questions, round 1: Multi-core, MTIMER, MMIO, main loop
-//  Date: Feb 15, 2022, 7:20AM
+//  ( The following is from email between Bill McSpadden and Martin Berger )
+//  ( Subject: RISC-V Sail model questions, round 1: Multi-core, MTIMER, MMIO, main loop)
+//  ( Date: Feb 15, 2022, 7:20AM)
 
 The model isn't directly about testing. Testing is a separate
 activity. The point of the model is to be as clear as possible. and we
 should keep testing and the model separate.
 
-=== Q: What are .ml files?  What are their purpose?
+//  ( The following is from email between Bill McSpadden and Martin Berger )
+//  ( Subject: RISC-V Sail model questions, round 1: Multi-core, MTIMER, MMIO, main loop)
+//  ( Date: Feb 15, 2022, 7:20AM)
+
+[#q_what_are_ml_files__what_are_their_purpose]
+==== Q: What are .ml files?  What are their purpose?
 
 A: These are OCaml files. They are to the ocaml emulator what the .c
 files are to the c emulator. I question the need for an OCaml emulator
 ,see also https://github.com/riscv/sail-riscv/issues/138
 
-## Q:
+[#q__is_there_any_support_for_MTIMER]
+==== Q: Is there any support for MTIMER?
+
+A: Yes.  MTIMER functionality lives in riscv_platform.sail.  At this date (2022-05-27) it lives
+at a fixed MMIO space as specified by the MCONFIG CSR.  In the future, once the Golden Model supports
+the RISCV_config YAML structure, the MTIMER can be assigned any address.
+
+[#q__is_the__main_loop__coded_in_Sail]
+==== Q: Is the "main loop" coded in Sail?
+
+A: Yes.  The main execution loop can be found in main.sail.
+
+[#q-can-gdb-attach-to-the-riscv-golden-model-to-debug-riscv-code]
+==== Q: Can gdb attach to the RISCV Golden Model to debug RISCV code?
+
+A:  Not at this time (2022-05-27).  It is being looked at as an enhancement.
+
+[#q__why_two_executables]
+==== Q: There are two C executables built: riscv_sim_RV32 and riscv_sim_RV64. Is there a reason why we need two executables? Can't XLEN be treated as a run-time setting rather than a compile time setting?
+
+A:  (Response from Martin Berger) I think this would require a redesign of the Sail code because of the way Sail's liquid types work. Currently xlen is a global type constant, that is used, directly or indirectly, everywhere. As a type-constant it is used during type checking. The typing system might (note the subjunctive) be flexible enough to turn this into a type-parameter, but probably not without major code surgery. I think we should ask the Cambridge team why they decided on the current approach.
+
+[#q___is_there_support_in_the_model_for_misaligned_memory_accesses]
+==== Q:  Is there support in the model for misaligned memory accesses?
+
+A: (Response from Martin Berger) Short answer: I don't know. Alignment stuff is distributed all over the code base.  riscv_platform.sail has some configuration options for this. Maybe that's a place to start looking?
 
 
-// The following is some sample questions based on HGttG,Hitchhikers Guide to the Galax
+//  ( The following is some sample questions based on HGttG,Hitchhikers Guide to the Galax)
 
-=== Q: What is the meaning of life, the universe and everything?
+[#q-what-is-the-meaning-of-life-the-universe-and-everything]
+==== Q: What is the meaning of life, the universe and everything?
 
 A: 42
 
-=== Q: What does the answer to "What is the meaning of life, the universe and everything" mean?
+[#q-what-does-the-answer-to-what-is-the-meaning-of-life-the-universe-and-everything-mean]
+==== Q: What does the answer to "What is the meaning of life, the universe and everything" mean?
 
 A: One must construct an experimental, organic computer to compute the meaning.
 Project 'Earth' is one such computer.  Timeframe for an expected answer is... soon.

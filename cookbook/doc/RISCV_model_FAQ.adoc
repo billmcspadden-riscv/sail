@@ -16,7 +16,7 @@
 
 <<q-what-is-the-meaning-of-life-the-universe-and-everything>>
 
-<<q-what-does-the-answer-to-"what-is-the-meaning-of-life-the-universe-and-everything"-mean>>
+<<q-what-does-the-answer-to-what-is-the-meaning-of-life-the-universe-and-everything-mean>>
 
 
 [#q_is_there_support_for_multi_hart_multi_core_simulation]
@@ -81,7 +81,7 @@ A: (Response from Martin Berger) Short answer: I don't know. Alignment stuff is 
 
 A: 42
 
-[#q-what-does-the-answer-to-"what-is-the-meaning-of-life-the-universe-and-everything"-mean]
+[#q-what-does-the-answer-to-what-is-the-meaning-of-life-the-universe-and-everything-mean]
 ==== Q: What does the answer to "What is the meaning of life, the universe and everything" mean?
 
 A: One must construct an experimental, organic computer to compute the meaning.
