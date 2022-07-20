@@ -4,9 +4,9 @@
 //
 // Description: Functions prototype support for cfunc
 //
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+// Author(s):   Bill McSpadden (bill@riscv.org)
 //
-// Revision:    See revision control log
+// Revision:    See git log
 // ============================================================================
 //#ifndef __CFUNC_H__
 //#define __CFUNC_H__

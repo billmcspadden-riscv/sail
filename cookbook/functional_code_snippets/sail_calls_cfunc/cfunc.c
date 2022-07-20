@@ -4,9 +4,9 @@
 //
 // Description: Functions to be called by Sail.
 //
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+// Author(s):   Bill McSpadden (bill@riscv.org)
 //
-// Revision:    See revision control log
+// Revision:    See git log
 // ============================================================================
 
 #include <sail.h>
