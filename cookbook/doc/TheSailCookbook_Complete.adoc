@@ -937,9 +937,9 @@ return a value to Sail.
 //
 // Description: Example sail file calling C functions
 //
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+// Author(s):   Bill McSpadden (bill@riscv.org)
 //
-// Revision:    See revision control log
+// Revision:    See git log
 // ============================================================================
 
 default Order dec
@@ -988,9 +988,9 @@ First,  the cfunc.h file ....
 //
 // Description: Functions prototype support for cfunc
 //
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+// Author(s):   Bill McSpadden (bill@riscv.org)
 //
-// Revision:    See revision control log
+// Revision:    See git log
 // ============================================================================
 //#ifndef __CFUNC_H__
 //#define __CFUNC_H__
@@ -1026,9 +1026,9 @@ And now,  cfunc.c,  which implements the functions...
 //
 // Description: Functions to be called by Sail.
 //
-// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+// Author(s):   Bill McSpadden (bill@riscv.org)
 //
-// Revision:    See revision control log
+// Revision:    See git log
 // ============================================================================
 
 #include <sail.h>
@@ -1104,7 +1104,7 @@ Here is the Makefile used to compile all of this.
 #
 # Description:	Makefile for building.....
 #
-# Author(s):	Bill McSpadden (william.c.mcspadden@gmail.com)
+# Author(s):	Bill McSpadden (bill@riscv.org)
 #
 # Revision:		See revision control log
 #
