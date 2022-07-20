@@ -27,6 +27,8 @@ all the programming examples found in this document.
 
 <<list_iteration_example>>
 
+<<Sail-Calls-C-function>>
+
 <<simple_cpu_example>>
 
 
@@ -440,6 +442,7 @@ include::../functional_code_snippets/sail_names_in_c/result-execute.c[]
 
 Here's another example of using the C foreign language interface...
 
+[#Sail-Calls-C-function]
 === Sail Calls C function
 
 Here is the sail code where we're trying to call a C function and
