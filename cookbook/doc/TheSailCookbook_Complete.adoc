@@ -919,6 +919,282 @@ case_3:
 
 **Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code.
 
+Here's another example of using the C foreign language interface...
+
+=== Sail Calls C function
+
+Here is the sail code where we're trying to call a C function and
+return a value to Sail.
+
+[source, sail]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    sail_calls_cfunc.sail
+//
+// Description: Example sail file calling C functions
+//
+// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+//
+// Revision:    See revision control log
+// ============================================================================
+
+default Order dec
+$include <prelude.sail>
+
+type xlenbits : Type = bits(32)
+
+val "print"         : string -> unit
+val "print_int"     : int -> unit
+
+val cfunc_int = { c: "cfunc_int" } : bool -> int    // TODO: get rid of bool
+val cfunc_str = { c: "cfunc_str" } : bool -> string // TODO: get rid of bool
+
+val main : unit -> unit
+
+function main() =
+    {
+    print("hello, world!\n") ;
+    print("hello, another world!\n") ;
+
+    let ret : int = cfunc_int(true);        // TODO: get rid of argument 'true'
+    print_int("cfunc_int: ", ret );
+
+    let ret_str : string = cfunc_str(true); // TODO: get rid of argument 'true'
+    print("ret_str: ");
+    print(ret_str);
+    print("\n");
+
+    }
+
+
+
+----
+
+Here is the C code,  in a .c and .h file.  The .h file is needed because
+it needs to be included in the out.c file that Sail generates for the
+C simulator.
+
+First,  the cfunc.h file ....
+
+[source, c]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    cfunc.h
+//
+// Description: Functions prototype support for cfunc
+//
+// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+//
+// Revision:    See revision control log
+// ============================================================================
+//#ifndef __CFUNC_H__
+//#define __CFUNC_H__
+//
+
+#pragma once
+
+#include "sail.h"
+
+//#define INT_RET_TYPE    sail_int
+#define INT_RET_TYPE    int
+
+// It doesn't appear that Sail does anything with the
+//  function's return value.  "return values" are done
+//  by passing a pointer to a return value struct, which
+//  is the first element in the function's argument list.
+//
+//  TODO: make the return value of type void.
+
+INT_RET_TYPE    cfunc_int(sail_int *,       bool);
+void            cfunc_str(sail_string * ,    bool);
+
+//#endif
+----
+
+And now,  cfunc.c,  which implements the functions...
+
+[source, c]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    cfunc.c
+//
+// Description: Functions to be called by Sail.
+//
+// Author(s):   Bill McSpadden (william.c.mcspadden@gmail.com)
+//
+// Revision:    See revision control log
+// ============================================================================
+
+#include <sail.h>
+#include "cfunc.h"
+#include "string.h"
+
+
+INT_RET_TYPE
+cfunc_int(sail_int *zret_int,  bool foo)
+    {
+//    mpz_set_ui(zret_int, 142);
+    mpz_set_ui(*zret_int, 142);
+//    mpz_set_ui(zret_int, 9223372036854775808 );                       // 2 ^ 64           // works
+//    mpz_set_ui(zret_int, (9223372036854775808 + 1) );                 // (2 ^ 64) + 1     // works
+//    mpz_set_ui(zret_int, (123456789012345678901234567890) );          // fails: sail.test prints out incorrect number But the next example works.
+//    mpz_init_set_str(*zret_int, "123 456 789 012 345 678 901 234 567 890", 10 );  // NOTE: white space allowed in string // works
+
+    return(42); // TODO: Nothing is done with this return value, right?
+    }
+
+
+void
+cfunc_str(sail_string * zret_str, bool foo)
+    {
+    //=========================
+    //  The following code ......
+    //
+    //    *zret_str =  "i'm baaaack...\n";
+    //
+    //    return;
+    //
+    //  ... yields a segmentation fault when killing
+    //  the sail_string variable (pointed to by zret_str)
+    //  in the calling code.  The calling code assumes that
+    //  memory has been malloc'd for the string,  and when
+    //  it's free'd,  you get a seg fault.  So,  I re-wrote
+    //  the code to do the actual malloc. But note the
+    //  assymetry of the memory management:  the space is
+    //  allocated here,  but free'd at the calling level.
+    //  This is,  at least,  ugly code.  And,  at worst,
+    //  prone to error.
+    //=========================
+    char *  str = "i'm baaaack....\n";
+    char *  s;
+
+    s = malloc(strlen(str));
+    strcpy(s, str);
+    *zret_str =  s;
+    return;
+
+    }
+
+// TODO:  Add many more return types such as...
+//          void *
+//          struct *
+//          float
+//          double
+//
+
+
+
+
+----
+
+
+Here is the Makefile used to compile all of this.
+
+[source, makefile]
+----
+# vim: set tabstop=4 shiftwidth=4 noexpandtab
+# ================================================================
+# Filename:		Makefile
+#
+# Description:	Makefile for building.....
+#
+# Author(s):	Bill McSpadden (william.c.mcspadden@gmail.com)
+#
+# Revision:		See revision control log
+#
+# ================================================================
+
+
+#==============
+# Includes
+#==============
+
+DEBUG_FLAGS		:= -g
+
+
+#==============
+# Make variables
+#==============
+SAIL_PATH 		:= /home/billmc/.opam/default
+SAIL_BIN		:= ${SAIL_PATH}/bin
+SAIL_LIB		:= ${SAIL_PATH}/lib/sail
+SAIL			:= ${SAIL_BIN}/sail
+SAIL_OUTFILE	:= out
+SAIL2C_INC		:= -c_include cfunc.h
+#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE}
+SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE}
+
+# TODO:  fix this.  Need to find an installation home for these C files.
+# 		Perhaps compile a library?
+#SAIL_DIR		:= /home/billmc/riscv/riscv_sail.git
+#SAIL_DIR		:= /home/billmc/riscv/riscv_sail__billmcspadden-riscv.git
+
+SAIL_DIR		:= ../../..
+SAIL_LIB		:= ${SAIL_DIR}/lib/sail
+SAIL			:= ${SAIL_DIR}/sail
+SAIL_OUTFILE	:= out
+#SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
+
+SAIL_SRC		:= $(wildcard *.sail)
+
+
+CC				:= gcc
+CCFLAGS			:= ${DEBUG_FLAGS} -lgmp -lz -I ${SAIL_DIR}/lib/ -o out
+#C_SRC			:= out.c ${SAIL_DIR}/lib/*.c cfunc.c
+C_SRC			:= cfunc.c out.c ${SAIL_DIR}/lib/*.c
+
+
+TARGET			:= out
+
+#==============
+# Targets and Rules
+#==============
+
+all: run
+
+
+build: out
+
+
+install:
+
+run: out
+	./out
+
+ddd: out
+	ddd ./out
+
+
+out: out.c cfunc.c cfunc.h
+	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
+	gcc ${CCFLAGS} ${C_SRC} -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+
+
+#	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+
+
+out.c: ${SAIL_SRC}
+	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
+	${SAIL} ${SAIL_FLAGS} $^
+
+
+
+
+# clean:  cleans only local artifacts
+clean:
+	rm -f out out.c out.ml *.o
+
+# Cleans local artifacts and the install location
+clean_all:
+
+
+
+----
+
+
 
 
 

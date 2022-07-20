@@ -438,6 +438,45 @@ include::../functional_code_snippets/sail_names_in_c/result-execute.c[]
 
 **Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code. 
 
+Here's another example of using the C foreign language interface...
+
+=== Sail Calls C function
+
+Here is the sail code where we're trying to call a C function and
+return a value to Sail.
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_calls_cfunc/sail_calls_cfunc.sail[]
+----
+
+Here is the C code,  in a .c and .h file.  The .h file is needed because
+it needs to be included in the out.c file that Sail generates for the 
+C simulator.
+
+First,  the cfunc.h file ....
+
+[source, c]
+----
+include::../functional_code_snippets/sail_calls_cfunc/cfunc.h[]
+----
+
+And now,  cfunc.c,  which implements the functions...
+
+[source, c]
+----
+include::../functional_code_snippets/sail_calls_cfunc/cfunc.c[]
+----
+
+
+Here is the Makefile used to compile all of this.
+
+[source, makefile]
+----
+include::../functional_code_snippets/sail_calls_cfunc/Makefile[]
+----
+
+
 
 
 
