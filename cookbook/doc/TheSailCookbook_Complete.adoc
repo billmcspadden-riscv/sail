@@ -30,6 +30,8 @@ all the programming examples found in this document.
 
 <<list_iteration_example>>
 
+<<scattered-definitions>>
+
 <<Sail-Calls-C-function>>
 
 <<simple_cpu_example>>
@@ -335,7 +337,7 @@ SAIL			:= ${SAIL_DIR}/sail
 SAIL_OUTFILE	:= out
 SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
 
-SAIL_SRC		:= $(wildcard *.sail)
+SAIL_SRC		?= $(wildcard *.sail)
 
 CC				:= gcc
 CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
@@ -1202,6 +1204,76 @@ clean_all:
 
 
 == Other stuff
+
+[#scattered-definitions]
+=== Scattered definitions:  Why?  What are they?
+
+When specifying an ISA,  you'd like to coalesce the defintions of an
+instruction (or a set of instructions,  if they have some similarity to
+each other) into a single file.  One benefit of such organizational principles
+is that you can take a single Sail file and import it into a text specification
+when describing the instructions whithout having to tear apart a much larger
+file.
+
+Functions, unions and mappings are definitions that can be scattered amongst
+multiple files.  Following is an example of scattered definitions of functions,
+unions and mappings.
+
+Here is the top-level Sail module
+
+[source, sail]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// File:    scattered_definitions.sail
+
+$include <prelude.sail>
+// Enums must be defined after prelude.sail (which is included
+//  in "scattered_definitions_include.sail") for some reason.
+//  Question sent to Alasdair about this on 2022-07-22
+//
+// This enum must be definded before the function signatures
+//  in "scattered_definitions_include.sail" else we get a
+//  compilation error
+enum enum_e = a_enum_e | b_enum_e | c_enum_e        // No Compile error
+$include "scattered_definitions_include.sail"
+
+scattered function func
+
+function main() =
+    {
+    print("hello, world!\n") ;
+    print("calling function 'func'....\n");
+    func(a_enum_e);
+    func(b_enum_e);
+    }
+
+----
+
+
+There is an order of compilation of Sail code that must be observed.
+The scattered definitions must be compiled last.  As such,  the Makefile
+specifies the compilation order as seen here:
+
+[source, makefile]
+----
+# vim: set tabstop=4 shiftwidth=4 noexpandtab
+# ================================================================
+
+# For this example,  Sail compile order is important.
+#	The ending of scattered definitions appear in scattered_definitions_end.sail,
+#	so this must be the last file.
+SAIL_SRC	:=  scattered_definitions.sail \
+				a.sail \
+				b.sail \
+				scattered_definitions_end.sail
+
+include ../Makefile.generic
+
+----
+
+
+
 
 ===  __FILE__ , __LINE__ , __LOC__
 
