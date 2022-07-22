@@ -27,6 +27,8 @@ all the programming examples found in this document.
 
 <<list_iteration_example>>
 
+<<scattered-definitions>>
+
 <<Sail-Calls-C-function>>
 
 <<simple_cpu_example>>
@@ -484,6 +486,40 @@ include::../functional_code_snippets/sail_calls_cfunc/Makefile[]
 
 
 == Other stuff
+
+[#scattered-definitions]
+=== Scattered definitions:  Why?  What are they?
+
+When specifying an ISA,  you'd like to coalesce the defintions of an
+instruction (or a set of instructions,  if they have some similarity to 
+each other) into a single file.  One benefit of such organizational principles
+is that you can take a single Sail file and import it into a text specification
+when describing the instructions whithout having to tear apart a much larger
+file.
+
+Functions, unions and mappings are definitions that can be scattered amongst
+multiple files.  Following is an example of scattered definitions of functions,
+unions and mappings.
+
+Here is the top-level Sail module
+
+[source, sail]
+----
+include::../functional_code_snippets/scattered_definitions/scattered_definitions.sail[]
+----
+
+
+There is an order of compilation of Sail code that must be observed.
+The scattered definitions must be compiled last.  As such,  the Makefile
+specifies the compilation order as seen here:
+
+[source, makefile]
+----
+include::../functional_code_snippets/scattered_definitions/Makefile[]
+----
+
+
+
 
 ===  __FILE__ , __LINE__ , __LOC__
 

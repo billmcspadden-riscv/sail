@@ -32,7 +32,7 @@ SAIL			:= ${SAIL_DIR}/sail
 SAIL_OUTFILE	:= out
 SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
 
-SAIL_SRC		:= $(wildcard *.sail)
+SAIL_SRC		?= $(wildcard *.sail)
 
 CC				:= gcc
 CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
