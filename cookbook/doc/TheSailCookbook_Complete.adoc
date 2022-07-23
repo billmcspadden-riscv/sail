@@ -410,10 +410,74 @@ C foreign function interface where we will show how Sail can call C functions).
 
 === "Hello, World" and the Sail interactive interpretter
 
-Invocation:
+This section is meant to introduce you to the the Sail interactive interpretter.
+We will not go into much detail about running it;  we'll simply take you through the
+hello_world example to show you how it is run.
 
-image:images/sail_i_invocation_2.png[]
+'1. Invocation....
 
+image:images/sail_i_hello_world_1.png[]
+
+'2. Execute the main() function....
+
+image:images/sail_i_hello_world_2.png[]
+
+'3. Each "step" in the following images is caused by hitting the "enter" key.
+This steps you from one statement to another.  Note the top line: we are being
+told we are in the main() function.
+
+image:images/sail_i_hello_world_3.png[]
+
+'4. "enter"
+
+image:images/sail_i_hello_world_4.png[]
+
+'5. "enter".   We now see the body of the main() function.
+
+image:images/sail_i_hello_world_5.png[]
+
+'6. "enter"
+
+image:images/sail_i_hello_world_6.png[]
+
+'7. "enter"
+
+image:images/sail_i_hello_world_7.png[]
+
+'8. "enter". On the top line,  we see the output from the print()
+statement, "hello, world".
+
+image:images/sail_i_hello_world_8.png[]
+
+'9. "enter"
+
+image:images/sail_i_hello_world_9.png[]
+
+'10. "enter"
+
+image:images/sail_i_hello_world_10.png[]
+
+'11. "enter".  And now we see the output from the second print statement
+pn the top line.
+
+image:images/sail_i_hello_world_11.png[]
+
+'12. "enter"
+
+image:images/sail_i_hello_world_12.png[]
+
+'13. "enter"
+
+image:images/sail_i_hello_world_13.png[]
+
+'14. "enter".  We have completed executing the function. The
+Result is printed out.
+
+image:images/sail_i_hello_world_14.png[]
+
+'15. ... and now  ... quit and exit....
+
+image:images/sail_i_hello_world_15.png[]
 
 
 
