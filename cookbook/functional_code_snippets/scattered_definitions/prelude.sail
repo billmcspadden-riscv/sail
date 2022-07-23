@@ -66,7 +66,7 @@
 /*  SUCH DAMAGE.                                                                         */
 /*=======================================================================================*/
 
-default Order dec
+//default Order dec
 
 $include <smt.sail>
 $include <option.sail>

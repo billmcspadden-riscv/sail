@@ -2,5 +2,7 @@
 // ============================================================================
 // File:    scattered_definitions_begin.sail
 
-scattered function func
+scattered function  func
+scattered function  print_enum_to_string
+scattered mapping   enum_to_string
 

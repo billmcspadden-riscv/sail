@@ -7,10 +7,10 @@
 //
 //enum enum_e = a_enum_e | b_enum_e | c_enum_e
 
-val "print" :   string      -> unit
-val func :      enum_e      -> unit
-val main :      unit        -> unit
-
-// TODO: should this be specified here or in scattered_definitions.sail???
-//scattered function func
-
+val "print"                 : string    -> unit
+val func                    : enum_e    -> unit
+val print_enum_to_string    : enum_e    -> unit
+val main                    : unit      -> unit
+val enum_to_string          : enum_e    <-> string
+//val "string_length"         : string    -> int
+val string_length = "string_length" : string -> nat
