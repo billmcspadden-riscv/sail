@@ -501,15 +501,41 @@ Functions, unions and mappings are definitions that can be scattered amongst
 multiple files.  Following is an example of scattered definitions of functions,
 unions and mappings.
 
-Here is the top-level Sail module
+Here is the top-level Sail module. Note that it calls 2 instances of
+func(), the difference being the "argument" that is passed to it.  But it's
+not really an argument;  the "argument" is used to decide which flavor of func()
+should be called.
 
 [source, sail]
 ----
 include::../functional_code_snippets/scattered_definitions/scattered_definitions.sail[]
 ----
 
+[source, sail]
+----
+include::../functional_code_snippets/scattered_definitions/scattered_definitions_include.sail[]
+----
 
-There is an order of compilation of Sail code that must be observed.
+Here are the 2 scattered definitions for func(),  found in 2 different files:
+
+[source, sail]
+----
+include::../functional_code_snippets/scattered_definitions/a.sail[]
+----
+
+[source, sail]
+----
+include::../functional_code_snippets/scattered_definitions/b.sail[]
+----
+
+And here is where the scattered definition of func() is end'd:
+
+[source, sail]
+----
+include::../functional_code_snippets/scattered_definitions/scattered_definitions_end.sail[]
+----
+
+And finally, there is an order of compilation of Sail code that must be observed.
 The scattered definitions must be compiled last.  As such,  the Makefile
 specifies the compilation order as seen here:
 
