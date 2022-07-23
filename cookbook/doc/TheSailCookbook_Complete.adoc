@@ -1227,7 +1227,9 @@ Here is the opening of the scattered definitions for this example:
 // ============================================================================
 // File:    scattered_definitions_begin.sail
 
-scattered function func
+scattered function  func
+scattered function  print_enum_to_string
+scattered mapping   enum_to_string
 
 ----
 
@@ -1242,12 +1244,24 @@ should be called.
 // ============================================================================
 // File:    scattered_definitions.sail
 
-$include <prelude.sail>
-// Enums must be defined after prelude.sail (which is included
-//  in "scattered_definitions_include.sail") for some reason.
+default Order dec
+
+// TODO: $SAIL_DIR/lib/prelude.sail does not contain the function
+//  'string_length()'.  There may be other functions missing as well
+//  but I have not investigated the list.  I copied over the file
+//  prelude.sail from the sail-riscv repository an added it to this
+//  directory in order to resolve the call to string_length().  Where
+//  does the call to string_length() come from?   The example itself
+//  does not use it directly.  It appears to have crept in when I
+//  added "mapping clause enum_to_string = b_enum_e <-> "b" "
+//  mappings in a.sail and b.sail.
+//$include <prelude.sail>
+$include "./prelude.sail"
+
+// Enums must be defined after prelude.sail for some reason.
 //  Question sent to Alasdair about this on 2022-07-22
 //
-// This enum must be definded before the function signatures
+// This enum must be defined before the function signatures
 //  in "scattered_definitions_include.sail" else we get a
 //  compilation error
 enum enum_e = a_enum_e | b_enum_e | c_enum_e        // No Compile error
@@ -1279,13 +1293,13 @@ which get included in several files.
 //
 //enum enum_e = a_enum_e | b_enum_e | c_enum_e
 
-val "print" :   string      -> unit
-val func :      enum_e      -> unit
-val main :      unit        -> unit
-
-// TODO: should this be specified here or in scattered_definitions.sail???
-//scattered function func
-
+val "print"                 : string    -> unit
+val func                    : enum_e    -> unit
+val print_enum_to_string    : enum_e    -> unit
+val main                    : unit      -> unit
+val enum_to_string          : enum_e    <-> string
+//val "string_length"         : string    -> int
+val string_length = "string_length" : string -> nat
 ----
 
 Here are the 2 scattered definitions for func(),  found in 2 different files:
@@ -1296,6 +1310,8 @@ Here are the 2 scattered definitions for func(),  found in 2 different files:
 // ============================================================================
 // File:    a.sail
 
+//$include <prelude.sail>
+//$include "./prelude.sail"
 $include "scattered_definitions_include.sail"
 
 function clause func(a_enum_e) =
@@ -1303,6 +1319,19 @@ function clause func(a_enum_e) =
     print("a.sail string: ") ;
     print("\n") ;
     }
+
+mapping clause enum_to_string = a_enum_e    <->     "a"
+//  {                               // Brackets with a single mapping item gives compile error
+//  a_enum_e    <->     "a"
+//  }
+
+// TODO:  Need a method for iterating through a mapping
+function clause print_enum_to_string(a_enum_e) =
+    {
+    print("");
+    }
+
+
 
 ----
 
@@ -1312,6 +1341,8 @@ function clause func(a_enum_e) =
 // ============================================================================
 // File:    b.sail
 
+//$include <prelude.sail>
+//$include "./prelude.sail"
 $include "scattered_definitions_include.sail"
 
 function clause func(b_enum_e) =
@@ -1319,6 +1350,18 @@ function clause func(b_enum_e) =
     print("b.sail string: ");
     print("\n");
     }
+
+mapping clause enum_to_string = b_enum_e    <->     "b"
+//  {                               // Brackets with a single mapping item gives compile error
+//  b_enum_e    <->     "b"
+//  }
+
+// TODO:  Need a method for iterating through a mapping
+function clause print_enum_to_string(b_enum_e) =
+    {
+    print("");
+    }
+
 
 
 
@@ -1333,11 +1376,12 @@ being done in one place.
 ----
 // vim: set tabstop=4 shiftwidth=4 expandtab
 // ============================================================================
-// File:    scatted_definition_end.sail
+// File:    scattered_definition_end.sail
 
 
 end func
-
+end print_enum_to_string
+end enum_to_string
 
 
 ----
