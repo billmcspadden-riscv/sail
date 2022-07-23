@@ -501,12 +501,17 @@ Functions, unions and mappings are definitions that can be scattered amongst
 multiple files.  Following is an example of scattered definitions of functions,
 unions and mappings.
 
+Here is the opening of the scattered definitions for this example:
+
+[source, sail]
+----
+include::../functional_code_snippets/scattered_definitions/scattered_definitions_begin.sail[]
+----
+
 Here is the top-level Sail module. Note that it calls 2 instances of
 func(), the difference being the "argument" that is passed to it.  But it's
 not really an argument;  the "argument" is used to decide which flavor of func()
-should be called.  Note also that the opening of the scattered definition(s) are 
-done in this file;  it might be a good idea to put the opening of the scattered
-definitions in their own files.
+should be called.
 
 [source, sail]
 ----
