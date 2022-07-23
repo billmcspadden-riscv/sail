@@ -266,7 +266,14 @@ C foreign function interface where we will show how Sail can call C functions).
 
 === "Hello, World" and the Sail interactive interpretter
 
-TBD
+Invocation:
+
+image:images/sail_i_invocation.png[]
+
+image:images/sail_i_invocation_2.png[]
+
+
+
 
 == Data types
 === effect annotations
