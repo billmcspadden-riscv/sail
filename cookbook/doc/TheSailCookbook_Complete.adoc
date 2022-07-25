@@ -34,6 +34,8 @@ all the programming examples found in this document.
 
 <<Sail-Calls-C-function>>
 
+<<Sail-Calls-C-function-for-YAML>>
+
 <<simple_cpu_example>>
 
 
@@ -1260,6 +1262,271 @@ clean_all:
 
 
 ----
+
+
+[#Sail-Calls-C-function-for-YAML]
+=== Sail Calls C function to get value from a YAML file
+
+We now extend the example to show how you can get a value from a YAML
+file and return it to the calling C function.
+
+This example depends on the library, libfyaml.  You need to have this
+installed on your system in order to build the test.
+
+Here's a simplified YAML file (it's part of the RISCV-Config file):
+
+[source, yaml]
+----
+hart0:
+  ISA: RV32IMAFCNSHUZicsr_Zifencei
+  supported_xlen: [32, 64]
+  physical_addr_sz: 32
+
+  misa:
+   reset-val: 0x401431A5
+   rv32:
+     accessible: true
+     mxl:
+       implemented: true
+       type:
+           warl:
+              dependency_fields: []
+              legal:
+                - mxl[1:0] in [0x1]
+              wr_illegal:
+                - unchanged
+     extensions:
+       implemented: true
+       type:
+           warl:
+              dependency_fields: []
+              legal:
+                - extensions[25:0] in [0x0000000:0x3FFFFFF]
+              wr_illegal:
+                - unchanged
+
+
+----
+
+In the following Sail file,  we go looking for the setting for /hart0/physical_addr_sz.
+
+[source, sail]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    sail_calls_cfunc.sail
+//
+// Description: Example sail file calling C functions that access riscv yaml
+//              config file
+//
+// Author(s):   Bill McSpadden (bill@riscv.org)
+//
+// Revision:    See git log
+// ============================================================================
+
+default Order dec
+$include <prelude.sail>
+
+type xlenbits : Type = bits(32)
+
+val "print"         : string -> unit
+val "print_int"     : int -> unit
+
+val cfunc_int = { c: "cfunc_int" } : string -> int
+
+val main : unit -> unit
+
+function main() =
+    {
+    print("hello, world!\n") ;
+
+    let ret : int = cfunc_int("/hart0/physical_addr_sz");
+    print_int("cfunc_int: ", ret );
+
+
+    }
+
+
+
+----
+
+The real work is done in the cfunc files.  Here is the C file that
+opens a YAML file,  searches for the key,  and then returns the value.
+(Note that there is also a cfunc.h file but we will not inspect it here.)
+
+[source, c]
+----
+// vim: set tabstop=4 shiftwidth=4 expandtab
+// ============================================================================
+// Filename:    cfunc.c
+//
+// Description: Functions to be called by Sail to get values from a yaml file.
+//
+// Author(s):   Bill McSpadden (bill@riscv.org)
+//
+// Revision:    See git log
+// ============================================================================
+
+#include <sail.h>
+#include "cfunc.h"
+#include "string.h"
+#include <libfyaml.h>
+
+
+INT_RET_TYPE
+//cfunc_int(sail_int *zret_int,  char * str, unit u)
+cfunc_int(sail_int *zret_int,  char * yaml_key_str)
+    {
+    struct fy_document      *fyd = NULL;
+    char                    *isa_yaml_filename = "./rv32i_isa.yaml";
+//  int                     yaml_val_int;
+    unsigned int            yaml_val_int;
+    int                     count;
+    char                    *tmp_str;
+    char                    *conversion_str = " %d";
+
+    tmp_str = malloc(strlen(yaml_key_str) + strlen(conversion_str));
+    strcpy(tmp_str, yaml_key_str);
+    strcat(tmp_str, conversion_str);
+
+    fyd = fy_document_build_from_file(NULL, isa_yaml_filename);
+    if ( !fyd )
+        {
+        fprintf(stderr, "error: failed to build document from yaml file, %s", isa_yaml_filename);
+        exit(1);
+        }
+
+    count = fy_document_scanf(fyd, tmp_str, &yaml_val_int);
+    if (count == 1)
+        {
+        mpz_set_ui(*zret_int, yaml_val_int);
+        }
+    else
+        {
+        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, isa_yaml_filename);
+        // TODO: figure out a return mechanism and let caller decide on action.
+        exit(1);
+        }
+
+    // TODO:  need to de-allocate memory from fy_document_build_from_file()
+    free(fyd);
+    free(tmp_str);
+
+    return(1);
+    }
+
+
+
+----
+
+And finally,  here is the Makefile that builds the executable:
+
+[source, makefile]
+----
+# vim: set tabstop=4 shiftwidth=4 noexpandtab
+# ================================================================
+# Filename:		Makefile
+#
+# Description:	Makefile for building.....
+#
+# Author(s):	Bill McSpadden (bill@riscv.org)
+#
+# Revision:		See revision control log
+#
+# ================================================================
+
+
+#==============
+# Includes
+#==============
+
+DEBUG_FLAGS		:= -g
+
+
+#==============
+# Make variables
+#==============
+SAIL_PATH 		:= /home/billmc/.opam/default
+SAIL_BIN		:= ${SAIL_PATH}/bin
+SAIL_LIB		:= ${SAIL_PATH}/lib/sail
+SAIL			:= ${SAIL_BIN}/sail
+SAIL_OUTFILE	:= out
+SAIL2C_INC		:= -c_include cfunc.h
+#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE}
+SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE}
+
+# TODO:  fix this.  Need to find an installation home for these C files.
+# 		Perhaps compile a library?
+#SAIL_DIR		:= /home/billmc/riscv/riscv_sail.git
+#SAIL_DIR		:= /home/billmc/riscv/riscv_sail__billmcspadden-riscv.git
+
+SAIL_DIR		:= ../../..
+SAIL_LIB		:= ${SAIL_DIR}/lib/sail
+SAIL			:= ${SAIL_DIR}/sail
+SAIL_OUTFILE	:= out
+#SAIL_FLAGS		:= -c -o ${SAIL_OUTFILE}
+
+SAIL_SRC		:= $(wildcard *.sail)
+
+FYAML_CFLAGS	:= `pkg-config --cflags libfyaml`
+FYAML_LDFLAGS	:= `pkg-config --libs libfyaml`
+
+CC				:= gcc
+CCFLAGS			:= ${DEBUG_FLAGS} ${FYAML_CFLAGS} -I ${SAIL_DIR}/lib/
+#C_SRC			:= out.c ${SAIL_DIR}/lib/*.c cfunc.c
+C_SRC			:= cfunc.c out.c ${SAIL_DIR}/lib/*.c
+
+LD_FLAGS		:= -lgmp -lz ${FYAML_LDFLAGS}
+
+
+TARGET			:= out
+
+#==============
+# Targets and Rules
+#==============
+
+all: run
+
+
+build: out
+
+
+install:
+
+run: out
+	./out
+
+ddd: out
+	ddd ./out
+
+out: cfunc.h
+
+out: out.c cfunc.c
+	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
+	gcc ${CCFLAGS} ${LD_FLAGS} ${C_SRC} -o $@ ${LD_FLAGS}
+
+
+#	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
+
+
+out.c: ${SAIL_SRC}
+	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
+	${SAIL} ${SAIL_FLAGS} $^
+
+
+
+
+# clean:  cleans only local artifacts
+clean:
+	rm -f out out.c out.ml *.o
+
+# Cleans local artifacts and the install location
+clean_all:
+
+
+
+----
+
 
 
 

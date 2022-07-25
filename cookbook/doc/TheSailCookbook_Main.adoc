@@ -31,6 +31,8 @@ all the programming examples found in this document.
 
 <<Sail-Calls-C-function>>
 
+<<Sail-Calls-C-function-for-YAML>>
+
 <<simple_cpu_example>>
 
 
@@ -549,6 +551,47 @@ Here is the Makefile used to compile all of this.
 ----
 include::../functional_code_snippets/sail_calls_cfunc/Makefile[]
 ----
+
+
+[#Sail-Calls-C-function-for-YAML]
+=== Sail Calls C function to get value from a YAML file
+
+We now extend the example to show how you can get a value from a YAML
+file and return it to the calling C function.
+
+This example depends on the library, libfyaml.  You need to have this 
+installed on your system in order to build the test.
+
+Here's a simplified YAML file (it's part of the RISCV-Config file):
+
+[source, yaml]
+----
+include::../functional_code_snippets/sail_calls_cfunc_for_yaml/rv32i_isa.yaml[]
+----
+
+In the following Sail file,  we go looking for the setting for /hart0/physical_addr_sz.
+
+[source, sail]
+----
+include::../functional_code_snippets/sail_calls_cfunc_for_yaml/sail_calls_cfunc_for_yaml.sail[]
+----
+
+The real work is done in the cfunc files.  Here is the C file that
+opens a YAML file,  searches for the key,  and then returns the value.
+(Note that there is also a cfunc.h file but we will not inspect it here.)
+
+[source, c] 
+----
+include::../functional_code_snippets/sail_calls_cfunc_for_yaml/cfunc.c[]
+----
+
+And finally,  here is the Makefile that builds the executable:
+
+[source, makefile]
+----
+include::../functional_code_snippets/sail_calls_cfunc_for_yaml/Makefile[]
+----
+
 
 
 
