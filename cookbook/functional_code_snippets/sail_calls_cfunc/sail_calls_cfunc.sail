@@ -17,8 +17,8 @@ type xlenbits : Type = bits(32)
 val "print"         : string -> unit
 val "print_int"     : int -> unit
 
-val cfunc_int = { c: "cfunc_int" } : bool -> int    // TODO: get rid of bool
-val cfunc_str = { c: "cfunc_str" } : bool -> string // TODO: get rid of bool
+val cfunc_int = { c: "cfunc_int" } : unit -> int
+val cfunc_str = { c: "cfunc_str" } : unit -> string
 
 val main : unit -> unit
 
@@ -27,10 +27,10 @@ function main() =
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
 
-    let ret : int = cfunc_int(true);        // TODO: get rid of argument 'true'
+    let ret : int = cfunc_int();
     print_int("cfunc_int: ", ret );
 
-    let ret_str : string = cfunc_str(true); // TODO: get rid of argument 'true'
+    let ret_str : string = cfunc_str();
     print("ret_str: ");
     print(ret_str);
     print("\n");
