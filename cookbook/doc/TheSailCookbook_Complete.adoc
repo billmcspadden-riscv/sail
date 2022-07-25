@@ -1021,8 +1021,8 @@ type xlenbits : Type = bits(32)
 val "print"         : string -> unit
 val "print_int"     : int -> unit
 
-val cfunc_int = { c: "cfunc_int" } : bool -> int    // TODO: get rid of bool
-val cfunc_str = { c: "cfunc_str" } : bool -> string // TODO: get rid of bool
+val cfunc_int = { c: "cfunc_int" } : unit -> int
+val cfunc_str = { c: "cfunc_str" } : unit -> string
 
 val main : unit -> unit
 
@@ -1031,10 +1031,10 @@ function main() =
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
 
-    let ret : int = cfunc_int(true);        // TODO: get rid of argument 'true'
+    let ret : int = cfunc_int();
     print_int("cfunc_int: ", ret );
 
-    let ret_str : string = cfunc_str(true); // TODO: get rid of argument 'true'
+    let ret_str : string = cfunc_str();
     print("ret_str: ");
     print(ret_str);
     print("\n");
@@ -1081,8 +1081,8 @@ First,  the cfunc.h file ....
 //
 //  TODO: make the return value of type void.
 
-INT_RET_TYPE    cfunc_int(sail_int *,       bool);
-void            cfunc_str(sail_string * ,    bool);
+INT_RET_TYPE    cfunc_int(sail_int *, unit);
+void            cfunc_str(sail_string *, unit);
 
 //#endif
 ----
@@ -1108,7 +1108,8 @@ And now,  cfunc.c,  which implements the functions...
 
 
 INT_RET_TYPE
-cfunc_int(sail_int *zret_int,  bool foo)
+//cfunc_int(sail_int *zret_int, bool b)
+cfunc_int(sail_int *zret_int, unit u)
     {
 //    mpz_set_ui(zret_int, 142);
     mpz_set_ui(*zret_int, 142);
@@ -1122,7 +1123,8 @@ cfunc_int(sail_int *zret_int,  bool foo)
 
 
 void
-cfunc_str(sail_string * zret_str, bool foo)
+//cfunc_str(sail_string * zret_str, bool b)
+cfunc_str(sail_string * zret_str, unit u)
     {
     //=========================
     //  The following code ......
@@ -1151,15 +1153,6 @@ cfunc_str(sail_string * zret_str, bool foo)
     return;
 
     }
-
-// TODO:  Add many more return types such as...
-//          void *
-//          struct *
-//          float
-//          double
-//
-
-
 
 
 ----
@@ -1516,6 +1509,8 @@ Following are a set of FAQs that were generated via set of questions to the Sail
 
 <<q-is-there-a-library-methodology-for-sail>>
 
+<<q-is-there-support-for-variable-argument-lists-in-sail>>
+
 <<q-rvfidii-what-is-it>>
 
 <<q__what_does_the_skid_underscore_character_mean_in_Sail>>
@@ -1524,10 +1519,13 @@ Following are a set of FAQs that were generated via set of questions to the Sail
 
 <<q-what-is-the-difference-between-Int-int-integer>>
 
+// TODO:  do i want to use the standard QandA formating?  I don't think
+//       i like it too much
+//[qanda]
 [#q-what-are-the-purposes-of-text-constructs-things-like-include-optimize-etc]
 ==== Q: What are the purposes of "$\<text\>" constructs,  things like $include, $optimize, etc?
 
-A: $<...> runs what might be called the preprocessor (for directives like `$include <prelude.sail>`).
+$<...> runs what might be called the preprocessor (for directives like `$include <prelude.sail>`).
 Note that, unlike C, the Sail preprocessor works (recursively) on Sail ASTs rather than strings.
 Note that such directives that are used are preserved in the AST, so they also function as a useful
 way to pass auxiliary information to the various Sail backends.
@@ -1542,11 +1540,25 @@ internal version of Sail that are using $...
 "$\<text\>" is also called a "splice" because it's used to 'splice' code in.
 
 [#q-is-there-a-library-methodology-for-sail]
-==== Q: Is there a library methodology for Sail?
+==== Q: Is there a library methodology for Sail?::
 
-A: Use $include for common code
+Use $include for common code
 
-Ideally, Sail would support a proper module system. This would be especially useful for a modular architecture like RISCV. Form a pure Sail language perspective, it is not problem adding a well-designed module system (like OCaml's) to Sail. However, it's an open problem how to compile such a module system to Coq (IIRC). It's probably a solvable research question but nobody seems to be working on this. So for the time being, we will have to stay with "$include <...>"
+Ideally, Sail would support a proper module system. This would be especially useful for a modular architecture
+like RISCV. Form a pure Sail language perspective, it is not problem adding a well-designed module system
+(like OCaml's) to Sail. However, it's an open problem how to compile such a module system to Coq (IIRC).
+It's probably a solvable research question but nobody seems to be working on this. So for the time being,
+we will have to stay with "$include <...>"
+
+[#q-is-there-support-for-variable-argument-lists-in-sail]
+==== Q: Is there support for variable argument lists in Sail?  What about print() functions?
+
+A: No,  there is not support for varargs type functions at this time.
+
+For print() functions,  do something like...
+
+print("this is  a string with an int, "); print_int(foobar); print("\n");
+
 
 [#q-rvfidii-what-is-it]
 ==== Q: RVFI_DII:  What is it?
@@ -1575,7 +1587,16 @@ Sail uses a multiprecision package in order to have varying integer sizes,
 even greater than 64 bits,  or 128 bits.  The compute system provides the
 maximal limit on integer size.
 
+==== Q: I would like to iterarate through a mapping.  Can I do that?
 
+A:  No,  not at this time.  Here is Alasdair's answer to the question:
+
+We don't have any kind of reflection in Sail, so to do things like walk
+over the set of mappings the best way is to write some OCaml code to do
+that (if I understand the question correctly). You can import Sail as an
+OCaml library and then programmatically manipulate and inspect the Sail
+specification as needed. The only downside is the API isn't stable
+between Sail versions.
 
 
 === Frequently Asked Questions about the Sail RISC-V Golden Model

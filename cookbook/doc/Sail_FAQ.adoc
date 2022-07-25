@@ -4,6 +4,8 @@
 
 <<q-is-there-a-library-methodology-for-sail>>
 
+<<q-is-there-support-for-variable-argument-lists-in-sail>>
+
 <<q-rvfidii-what-is-it>>
 
 <<q__what_does_the_skid_underscore_character_mean_in_Sail>>
@@ -43,7 +45,7 @@ like RISCV. Form a pure Sail language perspective, it is not problem adding a we
 It's probably a solvable research question but nobody seems to be working on this. So for the time being, 
 we will have to stay with "$include <...>"
 
-[#q-is-there-a-library-methodology-for-sail]
+[#q-is-there-support-for-variable-argument-lists-in-sail]
 ==== Q: Is there support for variable argument lists in Sail?  What about print() functions?
 
 A: No,  there is not support for varargs type functions at this time.
