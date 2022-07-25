@@ -15,7 +15,8 @@
 
 
 INT_RET_TYPE
-cfunc_int(sail_int *zret_int,  bool foo)
+//cfunc_int(sail_int *zret_int, bool b) 
+cfunc_int(sail_int *zret_int, unit u) 
     {
 //    mpz_set_ui(zret_int, 142);
     mpz_set_ui(*zret_int, 142);
@@ -29,7 +30,8 @@ cfunc_int(sail_int *zret_int,  bool foo)
 
 
 void
-cfunc_str(sail_string * zret_str, bool foo)
+//cfunc_str(sail_string * zret_str, bool b)
+cfunc_str(sail_string * zret_str, unit u)
     {
     //=========================
     //  The following code ......
@@ -58,14 +60,5 @@ cfunc_str(sail_string * zret_str, bool foo)
     return;
 
     }
-
-// TODO:  Add many more return types such as...
-//          void *
-//          struct *
-//          float
-//          double
-//
-
-
 
 

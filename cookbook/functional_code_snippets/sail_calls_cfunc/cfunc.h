@@ -26,7 +26,7 @@
 //
 //  TODO: make the return value of type void.
 
-INT_RET_TYPE    cfunc_int(sail_int *,       bool);
-void            cfunc_str(sail_string * ,    bool);
+INT_RET_TYPE    cfunc_int(sail_int *, unit);
+void            cfunc_str(sail_string *, unit);
 
 //#endif
