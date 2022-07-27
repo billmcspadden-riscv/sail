@@ -28,6 +28,8 @@
 
 //INT_RET_TYPE    cfunc_int(sail_int *, char *,  unit);     // TODO:  find out why unit is sometimes required, sometimes not INT_RET_TYPE    cfunc_int(sail_int *, char *);
 
-INT_RET_TYPE    cfunc_int(sail_int *, char *);
+INT_RET_TYPE    cfunc_int(sail_int *, char *, char *);
+
+unit            cfunc_dump_yaml(char *);
 
 //#endif

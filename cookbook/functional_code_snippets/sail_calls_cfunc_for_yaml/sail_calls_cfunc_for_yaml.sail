@@ -18,15 +18,23 @@ type xlenbits : Type = bits(32)
 val "print"         : string -> unit
 val "print_int"     : int -> unit
 
-val cfunc_int = { c: "cfunc_int" } : string -> int
+val cfunc_int           = { c: "cfunc_int" }        : (string, string)  -> int
+
+//val "func_dump_yaml"    = { c: "cfunc_dump_yaml" }  : (string)          -> unit   // syntax error
+//val func_dump_yaml    = { c: "cfunc_dump_yaml" }  : (string)          ->        // syntax error
+val cfunc_dump_yaml     = { c: "cfunc_dump_yaml" }  : (string)          -> unit
 
 val main : unit -> unit
 
 function main() = 
     {
+    let yaml_filename : string = "./rv32i_isa.yaml";
+
     print("hello, world!\n") ;
 
-    let ret : int = cfunc_int("/hart0/physical_addr_sz");
+    cfunc_dump_yaml(yaml_filename);
+
+    let ret : int = cfunc_int(yaml_filename, "/hart0/physical_addr_sz");
     print_int("cfunc_int: ", ret );
 
 

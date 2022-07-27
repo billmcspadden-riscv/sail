@@ -16,11 +16,9 @@
 
 
 INT_RET_TYPE
-//cfunc_int(sail_int *zret_int,  char * str, unit u)
-cfunc_int(sail_int *zret_int,  char * yaml_key_str)
+cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
     {
     struct fy_document      *fyd = NULL;
-    char                    *isa_yaml_filename = "./rv32i_isa.yaml";
 //  int                     yaml_val_int;
     unsigned int            yaml_val_int;
     int                     count;
@@ -31,10 +29,10 @@ cfunc_int(sail_int *zret_int,  char * yaml_key_str)
     strcpy(tmp_str, yaml_key_str);
     strcat(tmp_str, conversion_str);
 
-    fyd = fy_document_build_from_file(NULL, isa_yaml_filename);
+    fyd = fy_document_build_from_file(NULL, yaml_filename);
     if ( !fyd )
         {
-        fprintf(stderr, "error: failed to build document from yaml file, %s", isa_yaml_filename);
+        fprintf(stderr, "error: failed to build document from yaml file, %s", yaml_filename);
         exit(1);
         }
 
@@ -45,7 +43,7 @@ cfunc_int(sail_int *zret_int,  char * yaml_key_str)
         }
     else
         {
-        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, isa_yaml_filename);
+        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, yaml_filename);
         // TODO: figure out a return mechanism and let caller decide on action.
         exit(1);
         }
@@ -57,5 +55,13 @@ cfunc_int(sail_int *zret_int,  char * yaml_key_str)
     return(1);
     }
 
+unit
+cfunc_dump_yaml(char *yaml_filename)
+    {
+    struct fy_document      *fyd = NULL;
 
+    fyd = fy_document_build_from_file(NULL, yaml_filename);
+    fy_emit_document_to_fp(fyd, FYECF_DEFAULT | FYECF_SORT_KEYS, stdout);
+    free(fyd);
+    }
 

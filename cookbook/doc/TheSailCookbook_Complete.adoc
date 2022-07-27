@@ -1331,15 +1331,23 @@ type xlenbits : Type = bits(32)
 val "print"         : string -> unit
 val "print_int"     : int -> unit
 
-val cfunc_int = { c: "cfunc_int" } : string -> int
+val cfunc_int           = { c: "cfunc_int" }        : (string, string)  -> int
+
+//val "func_dump_yaml"    = { c: "cfunc_dump_yaml" }  : (string)          -> unit   // syntax error
+//val func_dump_yaml    = { c: "cfunc_dump_yaml" }  : (string)          ->        // syntax error
+val cfunc_dump_yaml     = { c: "cfunc_dump_yaml" }  : (string)          -> unit
 
 val main : unit -> unit
 
 function main() =
     {
+    let yaml_filename : string = "./rv32i_isa.yaml";
+
     print("hello, world!\n") ;
 
-    let ret : int = cfunc_int("/hart0/physical_addr_sz");
+    cfunc_dump_yaml(yaml_filename);
+
+    let ret : int = cfunc_int(yaml_filename, "/hart0/physical_addr_sz");
     print_int("cfunc_int: ", ret );
 
 
@@ -1373,11 +1381,9 @@ opens a YAML file,  searches for the key,  and then returns the value.
 
 
 INT_RET_TYPE
-//cfunc_int(sail_int *zret_int,  char * str, unit u)
-cfunc_int(sail_int *zret_int,  char * yaml_key_str)
+cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
     {
     struct fy_document      *fyd = NULL;
-    char                    *isa_yaml_filename = "./rv32i_isa.yaml";
 //  int                     yaml_val_int;
     unsigned int            yaml_val_int;
     int                     count;
@@ -1388,10 +1394,10 @@ cfunc_int(sail_int *zret_int,  char * yaml_key_str)
     strcpy(tmp_str, yaml_key_str);
     strcat(tmp_str, conversion_str);
 
-    fyd = fy_document_build_from_file(NULL, isa_yaml_filename);
+    fyd = fy_document_build_from_file(NULL, yaml_filename);
     if ( !fyd )
         {
-        fprintf(stderr, "error: failed to build document from yaml file, %s", isa_yaml_filename);
+        fprintf(stderr, "error: failed to build document from yaml file, %s", yaml_filename);
         exit(1);
         }
 
@@ -1402,7 +1408,7 @@ cfunc_int(sail_int *zret_int,  char * yaml_key_str)
         }
     else
         {
-        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, isa_yaml_filename);
+        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, yaml_filename);
         // TODO: figure out a return mechanism and let caller decide on action.
         exit(1);
         }
@@ -1414,7 +1420,15 @@ cfunc_int(sail_int *zret_int,  char * yaml_key_str)
     return(1);
     }
 
+unit
+cfunc_dump_yaml(char *yaml_filename)
+    {
+    struct fy_document      *fyd = NULL;
 
+    fyd = fy_document_build_from_file(NULL, yaml_filename);
+    fy_emit_document_to_fp(fyd, FYECF_DEFAULT | FYECF_SORT_KEYS, stdout);
+    free(fyd);
+    }
 
 ----
 
@@ -1785,6 +1799,12 @@ Following are a set of FAQs that were generated via set of questions to the Sail
 
 <<q-what-is-the-difference-between-Int-int-integer>>
 
+<<q-i-would-like-to-iterate-through-a-mapping>>
+
+<<q-what-is-the-difference-in-the-function-signatures-quotes-vs-no-quotes>>
+
+<<q---is-there-native-support-in-Sail-for-processing-command-line-arguments>>
+
 // TODO:  do i want to use the standard QandA formating?  I don't think
 //       i like it too much
 //[qanda]
@@ -1853,7 +1873,8 @@ Sail uses a multiprecision package in order to have varying integer sizes,
 even greater than 64 bits,  or 128 bits.  The compute system provides the
 maximal limit on integer size.
 
-==== Q: I would like to iterarate through a mapping.  Can I do that?
+[#q-i-would-like-to-iterate-through-a-mapping]
+==== Q: I would like to iterate through a mapping.  Can I do that?
 
 A:  No,  not at this time.  Here is Alasdair's answer to the question:
 
@@ -1864,6 +1885,22 @@ OCaml library and then programmatically manipulate and inspect the Sail
 specification as needed. The only downside is the API isn't stable
 between Sail versions.
 
+
+[#q-what-is-the-difference-in-the-function-signatures-quotes-vs-no-quotes]
+==== Q: What is the difference in the function signatures, `val "function_a" : string -> unit` and `val  function_a  : string -> unit` ?  What do the double quotes indicate?
+
+A:  TBAnswered
+
+[#q---is-there-native-support-in-Sail-for-processing-command-line-arguments]
+==== Q:  Is there native support in Sail for processing command line arguments for the C emulator?
+
+A: There is no native support for `argc/argv` data types.
+
+However,  in the C foreign interface,  you can process the arguments in the
+`main()` routine and provide a mechanism for Sail to see the values.
+
+An example of this is done in the RISC-V model. See the file, `c_emulator/riscv_sim.c`,
+for the example.
 
 === Frequently Asked Questions about the Sail RISC-V Golden Model
 

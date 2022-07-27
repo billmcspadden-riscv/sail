@@ -14,6 +14,12 @@
 
 <<q-what-is-the-difference-between-Int-int-integer>>
 
+<<q-i-would-like-to-iterate-through-a-mapping>>
+
+<<q-what-is-the-difference-in-the-function-signatures-quotes-vs-no-quotes>>
+
+<<q---is-there-native-support-in-Sail-for-processing-command-line-arguments>>
+
 // TODO:  do i want to use the standard QandA formating?  I don't think
 //       i like it too much
 //[qanda]
@@ -82,7 +88,8 @@ Sail uses a multiprecision package in order to have varying integer sizes,
 even greater than 64 bits,  or 128 bits.  The compute system provides the
 maximal limit on integer size.
 
-==== Q: I would like to iterarate through a mapping.  Can I do that?
+[#q-i-would-like-to-iterate-through-a-mapping]
+==== Q: I would like to iterate through a mapping.  Can I do that?
 
 A:  No,  not at this time.  Here is Alasdair's answer to the question:
 
@@ -93,3 +100,19 @@ OCaml library and then programmatically manipulate and inspect the Sail
 specification as needed. The only downside is the API isn't stable 
 between Sail versions.
 
+
+[#q-what-is-the-difference-in-the-function-signatures-quotes-vs-no-quotes]
+==== Q: What is the difference in the function signatures, `val "function_a" : string -> unit` and `val  function_a  : string -> unit` ?  What do the double quotes indicate?
+
+A:  TBAnswered
+
+[#q---is-there-native-support-in-Sail-for-processing-command-line-arguments]
+==== Q:  Is there native support in Sail for processing command line arguments for the C emulator?
+
+A: There is no native support for `argc/argv` data types.
+
+However,  in the C foreign interface,  you can process the arguments in the
+`main()` routine and provide a mechanism for Sail to see the values.
+
+An example of this is done in the RISC-V model. See the file, `c_emulator/riscv_sim.c`,
+for the example.
