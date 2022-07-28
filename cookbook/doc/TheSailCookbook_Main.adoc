@@ -401,6 +401,8 @@ TODO: this example is too RISCV specific (requires `xlenbits`), use something mo
 
 === Liquid data types (Martin)
 
+"Liquid": Portmanteau of "Logically Qualified"
+
 == Execution
 === Functions
 
