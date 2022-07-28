@@ -403,6 +403,8 @@ TODO: this example is too RISCV specific (requires `xlenbits`), use something mo
 
 "Liquid": Portmanteau of "Logically Qualified"
 
+http://goto.ucsd.edu/\~ucsdpl-blog/liquidtypes/2015/09/19/liquid-types/#:~:text=Liquid%20Types%20are%20a%20constraint,integer%20linear%2C%20set%20theory%20etc. [A Gentle Introduction to Liquid Types By Niki Vazou]
+
 == Execution
 === Functions
 
@@ -434,7 +436,7 @@ TODO: get the error message.
 In order to get this to compile into a C Sail model,
 you will need to provide a main function.  The 
 following code shows the implementation of a 
-``main()`` function that calls my_replicate bits().
+`main()` function that calls my_replicate bits().
 
 [source, sail]
 ----
