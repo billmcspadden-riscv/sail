@@ -359,6 +359,46 @@ What does " 'n " mean?
 
 === mappings
 
+=== Type declarations
+
+Sail is a modern programming language, in the ML tradition and has
+many forms of type constructors, in particular structs, unions, enums
+and bitfields. TBC
+
+=== Type declarations (1): Structs
+
+Note, as of 28 July 2022,  pattern matching on structs is not possible. See https://github.com/rems-project/sail/issues/179
+
+=== Type declarations (2): Unions 
+=== Type declarations (3): Enums 
+=== Type declarations (4): Bitfields
+
+Bitfields are a staple of ISA specifications, and Sail offers convenient support for bitfields. Here is an example from the RISCV specification:
+
+[source, sail]
+----
+include::../functional_code_snippets/bitfields/example1.sail[]
+----
+
+A bitfield definition creates a wrapper around a bit vector type, and
+automatically generates getters and setters for the fields, in case of the example `mtvec`, we have 
+
+- Getter: `mtvec->bits()`
+- Setter: `mtvec->bits() = ...`
+
+for the whole bitvector, and for individual fields
+
+- Getters:
+    * `mtvec.Base()`
+    * `mtvec.Mode()`  
+- Setters: 
+  * `mtvec.Base() = ...`
+  * `mtvec.Mode() = ...`
+
+The bitfield wrapper type will be the something like `union cr = { Mk_cr(bits(xlen)) }`
+TODO: this example is too RISCV specific (requires `xlenbits`), use something more generic.
+
+
 === Liquid data types (Martin)
 
 == Execution
@@ -512,6 +552,8 @@ include::../functional_code_snippets/sail_names_in_c/result-execute.c[]
 ----
 
 **Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code. 
+
+**Note.** See https://github.com/rems-project/sail/issues/177
 
 Here's another example of using the C foreign language interface...
 
