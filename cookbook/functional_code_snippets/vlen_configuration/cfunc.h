@@ -8,27 +8,28 @@
 //
 // Revision:    See revision control log
 // ============================================================================
-//#ifndef __CFUNC_H__
-//#define __CFUNC_H__
 //
 
 #pragma once
 
 #include "sail.h" 
 
-//#define INT_RET_TYPE    sail_int
 #define INT_RET_TYPE    int
 
-// It doesn't appear that Sail does anything with the
-//  function's return value.  "return values" are done
-//  by passing a pointer to a return value struct, which
-//  is the first element in the function's argument list.
+// Sail may or may not do anything with the return value. The general
+//  solution (for integers greater than 64 bits),  is to use the multi-precision
+//  integer in the mpz library.  HOWEVER,  if the integar can be packed
+//  into a native datatype,  the Sail compiler will optimize and provide a
+//  return value.
 //
-//  TODO: make the return value of type void.
+//  In this example, here is the Sail function signature:
+//
+//      val get_vlen = { c: "get_vlen" } : unit -> {| 128, 256, 512 |} 
+//
+//  Note that the allowed returned values are 128. 256 and 512.  All of
+//  these can be packed into a native C datatype (int).  As such, the C
+//  functions need to specify this.
 
-//INT_RET_TYPE    get_vlen(sail_int *,       bool);
-//INT_RET_TYPE    get_vlen(sail_int *);
-//INT_RET_TYPE    get_vlen(sail_int *, UNIT u);
-INT_RET_TYPE    get_vlen(sail_int *, int);
+INT_RET_TYPE    get_vlen(int);
 
 //#endif

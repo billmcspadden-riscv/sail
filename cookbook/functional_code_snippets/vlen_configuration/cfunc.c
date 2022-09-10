@@ -17,12 +17,13 @@
 INT_RET_TYPE
 //get_vlen(sail_int *zret_int,  bool foo)
 //get_vlen(sail_int *zret_int)
-get_vlen(sail_int *zret_int, int u)
+//get_vlen(sail_int *zret_int, int u)
+get_vlen(                    int u)
 
     {
 
-    mpz_set_ui(*zret_int, 128);
-    return(0);
+//    mpz_set_ui(*zret_int, 128);
+    return(128);
     }
 
 
