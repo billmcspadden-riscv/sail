@@ -42,7 +42,7 @@ SAIL_OUTFILE	:= out
 SAIL2C_INC		:= -c_include cfunc.h
 
 SAIL_SRC		:= $(wildcard *.sail)
-SAIL_FLAGS		:= ${SAIL2C_INC} -c -o ${SAIL_OUTFILE} 
+SAIL_FLAGS		:= ${SAIL2C_INC} -dno_cast -c -o ${SAIL_OUTFILE} 
 
 
 CC				:= gcc

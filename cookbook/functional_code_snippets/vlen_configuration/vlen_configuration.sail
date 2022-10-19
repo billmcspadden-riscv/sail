@@ -25,6 +25,12 @@ val get_vlen = { c: "get_vlen" } : unit -> {| 128, 256, 512 |}    // 'unit' is a
 val main            : unit -> unit
 val "print"         : string -> unit
 val "print_int"     : int -> unit
+//val process_vle_2 : forall ('vlen : Int) . ('vlen, string) -> unit
+//val process_vle_2 : forall 'vlen . (int, string) -> unit
+//val process_vle_2 : forall 'vlen . (int, string) -> unit
+//val process_vle_2 : forall  'vlen . ('vlen, string) -> unit     //  Type variable 'vlen in type 'vlen is Int rather than Type
+//val process_vle_2 : forall ('vlen : Type)  . ('vlen, string) -> unit    // OK
+val process_vle_2 : forall ('vlen : Int )  . (bits('vlen), string) -> unit
 
 // Function signatures
 //===================================================
@@ -40,6 +46,9 @@ function main() =
     print("\n");
 
 //    vlen = ret;
+
+//    process_vle_2(32, "hello");     // SCE: Could not resolve quantifiers for process_vle_2  * ('vlen : Int)
+    process_vle_2(32, "hello\n");
 
     }
 
@@ -82,13 +91,25 @@ function process_vle_1 (arg1, arg2, arg3, arg4) =
     v
     }
 
-val process_vle_2 : forall ('vlen 'b 'n : Int ) . ( int('b), bits('n), vector(('b * 'n),dec, bit) )  -> bits('vlen)
-function process_vle_2 (arg1, arg2, arg3) =
-    {
-    let 'vlen = get_vlen();
-    let xs : bits('vlen) = arg3;
+//val process_vle_2 : forall ('vlen 'b 'n : Int ) . ( int('b), bits('n), vector(('b * 'n),dec, bit) )  -> bits('vlen)
+////val process_vle_2 : forall (bits(32) 'vlen,  'b 'n : Int ) . ( int('b), bits('n), vector(('b * 'n),dec, bit) )  -> bits('vlen)
+//function process_vle_2 (arg1, arg2, arg3) =
+//    {
+//    let 'vlen = get_vlen();
+//    let xs : bits('vlen) = arg3;
+//
+//    xs
+//    }
 
-    xs
+//val process_vle_2 : forall 'vlen . ( ) -> unit
+//val process_vle_2 : forall 'vlen .  -> unit
+function process_vle_2 (arg1, arg2) =
+    {
+    print(arg2);
+//    print_int("size of 'vlen", sizeof('vlen) );
+//    print_int("size of 'vlen ",        arg1  );
+//    print_int("size of 'vlen", sizeof(arg1) );      // SCE:  cannot re-write sizeof(arg1)
+//    print_int("size of 'vlen", sizeof('vlen) );      // SCE:  cannot re-write sizeof('vlen)
     }
 
 
