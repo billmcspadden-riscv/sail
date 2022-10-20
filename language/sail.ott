@@ -82,6 +82,8 @@ type 'a annot = l * 'a
 
 type loop = While | Until
 
+type extern = { pure : bool; bindings : (string * string) list } option
+
 }}
 
 embed
@@ -94,6 +96,8 @@ type value = | Val
 type loop = While | Until
 
 type annot 'a = l * 'a
+
+type extern = <| pure : bool; bindings : list (string * string) |>
 
 }}
 
@@ -133,12 +137,18 @@ metavar ix ::=
 
 grammar
 
-l :: '' ::=                                     {{ phantom }}
-                                                {{ ocaml Parse_ast.l }}
-                                                {{ lem l }}
-                                                {{ hol unit }}
+external :: '' ::=
+  {{ phantom }}
+  {{ lem maybe extern }}
+  {{ ocaml extern option }}
+
+l :: '' ::=
+  {{ phantom }}
+  {{ ocaml Parse_ast.l }}
+  {{ lem l }}
+  {{ hol unit }}
   {{ com source location }}
-  |                                             :: :: Unknown
+  | :: :: Unknown
     {{ ocaml Unknown }}
     {{ lem Unknown }}
     {{ hol () }}
@@ -196,40 +206,14 @@ order :: 'Ord_' ::=
   | dec                                 :: :: dec {{ com decreasing }}
   | ( order )                           :: S :: paren {{ ichlo [[order]] }}
 
-base_effect :: 'BE_' ::=
-  {{ com effect }}
-  {{ aux _ l }}
-  | rreg                                :: :: rreg {{ com read register }}
-  | wreg                                :: :: wreg {{ com write register }}
-  | rmem                                :: :: rmem {{ com read memory }}
-  | rmemt                               :: :: rmemt {{ com read memory and tag }}
-  | wmem                                :: :: wmem {{ com write memory }}
-  | wmea                                :: :: eamem {{ com signal effective address for writing memory }}
-  | exmem                               :: :: exmem {{ com determine if a store-exclusive (ARM) is going to succeed }}
-  | wmv                                 :: :: wmv {{ com write memory, sending only value }}
-  | wmvt                                :: :: wmvt {{ com write memory, sending only value and tag }}
-  | barr                                :: :: barr {{ com memory barrier }}
-  | depend                              :: :: depend {{ com dynamic footprint }}
-  | undef                               :: :: undef {{ com undefined-instruction exception }}
-  | unspec                              :: :: unspec {{ com unspecified values }}
-  | nondet                              :: :: nondet {{ com nondeterminism, from $[[nondet]]$ }}
-  | escape                              :: :: escape {{ com potential exception }}
-  | config                              :: :: config {{ com configuration option }}
-
-effect :: 'Effect_' ::=
-  {{ aux _ l }}
-  | { base_effect1 , .. , base_effectn } :: :: set {{ com effect set }}
-  | pure                                 :: M :: pure {{ com sugar for empty effect set }}
-    {{ ichlo (Effect_set []) }} 
-
 typ :: 'Typ_' ::=
   {{ com type expressions, of kind Type }}
   {{ aux _ l }}
   |                                               :: :: internal_unknown
   | id                                            :: :: id {{ com defined type }}
   | kid                                           :: :: var {{ com type variable }}
-  | ( typ1 , ... , typn ) -> typ2 effectkw effect :: :: fn {{ com Function (first-order only) }}
-  | typ1 <-> typ2 effectkw effect                 :: :: bidir {{ com Mapping }}
+  | ( typ1 , ... , typn ) -> typ2                 :: :: fn {{ com Function (first-order only) }}
+  | typ1 <-> typ2                                 :: :: bidir {{ com Mapping }}
   | ( typ1 , .... , typn )                        :: :: tup {{ com Tuple }}
   | id ( typ_arg1 , ... , typ_argn )              :: :: app {{ com type constructor application }}
   | ( typ )                                       :: S :: paren {{ ichlo [[typ]] }} 
@@ -272,7 +256,6 @@ quant_item :: 'QI_' ::=
   {{ aux _ l }}
   | kinded_id 	  	 	       	      :: :: id {{ com optionally kinded identifier }}
   | n_constraint			      :: :: constraint {{ com constraint }}
-  | kinded_id0 ... kinded_idn                 :: :: constant
 
 typquant :: 'TypQ_' ::=
   {{ com type quantifiers and constraints}}
@@ -409,84 +392,6 @@ P_app <= P_as
 
 grammar
 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % Interpreter specific things                                  %
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% optx :: '' ::= {{ phantom }} {{ lem maybe string }} {{ ocaml string option }}
-%   | x                                            ::  :: optx_x
-%   {{ lem (Just [[x]]) }} {{ ocaml (Some [[x]]) }}
-%   |                                              :: :: optx_none
-%   {{ lem Nothing }} {{ ocaml None }}
-
-% tag :: 'Tag_' ::=
-% {{ com Data indicating where the identifier arises and thus information necessary in compilation }}
-%    | None                                 :: :: empty
-%    | Intro                                :: :: intro {{ com Denotes an assignment and lexp that introduces a binding }}
-%    | Set                                  :: :: set {{ com Denotes an expression that mutates a local variable }}
-%    | Tuple                                :: :: tuple_assign {{ com Denotes an assignment with a tuple lexp }}
-%    | Global				  :: :: global {{ com Globally let-bound or enumeration based value/variable }}
-%    | Ctor                                 :: :: ctor {{ com Data constructor from a type union }}
-%    | Extern optx                          :: :: extern {{ com External function, specied only with a val statement }}
-%    | Default                              :: :: default {{ com Type has come from default declaration, identifier may not be bound locally }}
-%    | Spec				  :: :: spec
-%    | Enum num				  :: :: enum
-%    | Alias				  :: :: alias
-%    | Unknown_path optx			  :: :: unknown {{ com Tag to distinguish an unknown path from a non-analysis non deterministic path}}
-
-% embed
-% {{ lem
-
-% type tannot = maybe (typ * tag * list unit * effect * effect)
-
-% }}
-
-% embed
-% {{ ocaml
-
-% (* Interpreter specific things are just set to unit here *)
-% type tannot = unit
-
-% type reg_form_set = unit
-
-% }}
-
-% grammar
-% tannot :: '' ::=
-%   {{ phantom }}
-%   {{ ocaml unit }}
-%   {{ lem tannot }}
-
-% i_direction :: 'I' ::=
-%   | IInc :: :: Inc
-%   | IDec :: :: Dec
-
-% ctor_kind :: 'C_' ::=
-%   | C_Enum nat :: :: Enum
-%   | C_Union    :: :: Union
-
-% reg_form :: 'Form_' ::=
-%   | Reg id tannot i_direction :: :: Reg
-%   | SubReg id reg_form index_range :: :: SubReg
-
-% reg_form_set :: '' ::= {{ phantom }} {{ lem set reg_form }}
-
-% alias_spec_tannot :: '' ::= {{ phantom }} {{ lem alias_spec tannot }} {{ ocaml tannot alias_spec }}
-
-% value :: 'V_' ::= {{ com interpreter evaluated value }}
-%   | Boxref nat typ                                                                  :: :: boxref
-%   | Lit lit                                                                         :: :: lit
-%   | Tuple ( value1 , ... , valuen )                                                 :: :: tuple
-%   | List ( value1 , ... , valuen )                                                  :: :: list
-%   | Vector nat i_direction ( value1 , ... , valuen )                                :: :: vector
-%   | Vector_sparse nat' nat'' i_direction ( nat1 value1 , ... , natn valuen ) value' :: :: vector_sparse
-%   | Record typ ( id1 value1 , ... , idn valuen )                                    :: :: record
-%   | V_ctor id typ ctor_kind value1                                                  :: :: ctor
-%   | Unknown                                                                         :: :: unknown
-%   | Register reg_form                                                               :: :: register
-%   | Register_alias alias_spec_tannot tannot                                         :: :: register_alias
-%   | Track value reg_form_set                                                        :: :: track
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Expressions                                                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -565,6 +470,7 @@ exp :: 'E_' ::=
   | let pat = exp in exp'   :: I :: internal_plet {{ com This is an internal node, used to distinguised some introduced lets during processing from original ones }}
   | return_int ( exp )      ::  :: internal_return {{ com For internal use to embed into monad definition }}
   | value :: I :: internal_value {{ com For internal use in interpreter to wrap pre-evaluated values when returning an action }}
+  | assume n_constraint in exp :: :: internal_assume {{ com Internal node for additional type checker assumptions }}
   | constraint n_constraint :: :: constraint
 
 lexp :: 'LEXP_' ::= {{ com lvalue expression }}
@@ -683,12 +589,6 @@ rec_opt :: 'Rec_' ::=
   | rec                                         :: :: rec {{ com recursive without termination measure }}
   | { pat -> exp }                              :: :: measure {{ com recursive with termination measure }}
 
-effect_opt :: 'Effect_opt_' ::=
-  {{ com optional effect annotation for functions }}
-  {{ aux _ l }}
-  |                                              :: :: none {{ com no effect annotation }}
-  | effectkw effect                              :: :: effect
-
 % Generate a pexp, but from slightly different syntax (= rather than ->)
 pexp_funcl :: 'Pat_funcl_' ::=
   {{ auxparam 'a }}
@@ -707,10 +607,15 @@ funcl :: 'FCL_' ::=
 fundef :: 'FD_' ::=
   {{ com function definition}}
   {{ aux _ annot }} {{ auxparam 'a }}
-  | function rec_opt tannot_opt effect_opt funcl1 and ... and funcln :: :: function {{ texlong }}  
+  | function rec_opt tannot_opt funcl1 and ... and funcln :: :: function {{ texlong }}  
 % Note that the typ in the tannot_opt is
 % the *result* type, not the type of the whole function.  The argument
 % type comes from the pattern in the funcl
+
+impldef :: 'Impl_' ::=
+  {{ com impl for target }}
+  {{ aux _ l }} {{ auxparam 'a }}
+  | impl funcl :: :: impl
 
 mpat :: 'MP_' ::=
   {{ com Mapping pattern. Mostly the same as normal patterns but only constructible parts }}
@@ -752,6 +657,23 @@ letbind :: 'LB_' ::=
   | let pat = exp                                    :: :: val
     {{ com let, implicit type ($[[pat]]$ must be total)}}
 
+subst :: 'IS_' ::=
+  {{ aux _ l }}
+  {{ com instantiation substitution }}
+  | kid = typ :: :: typ
+    {{ com instantiate a type variable with a type }}
+  | id1 = id2 :: :: id
+    {{ com instantiate an identifier with another identifier }}
+
+outcome_spec :: 'OV_' ::=
+  {{ com outcome declaration }}
+  {{ aux _ l }}
+  | outcome id : typschm with kinded_id1 , ... , kinded_idn :: :: outcome
+
+instantiation_spec :: 'IN_' ::=
+  {{ aux _ annot }} {{ auxparam 'a }}
+  | id :: :: id  
+
 val_spec {{ ocaml 'a val_spec }} {{ lem val_spec 'a }} :: 'VS_' ::=
    {{ ocaml VS_aux of val_spec_aux * 'a annot }}
    {{ lem VS_aux of val_spec_aux * annot 'a }}
@@ -763,11 +685,10 @@ cast_opt :: 'Cast_' ::=
    |       :: S :: no_cast {{ ocaml false }} {{ lem false }} {{ isa false }}
    | cast  :: S :: cast {{ ocaml true }} {{ lem true }} {{ isa true }}
 
-
 val_spec_aux :: 'VS_' ::=
   {{ com value type specification }}
   {{ ocaml  VS_val_spec of typschm * id * (string * string) list * bool }}
-  {{ lem VS_val_spec of typschm * id * list (string * string) * bool }}
+  {{ lem VS_val_spec of typschm * id * maybe extern * bool }}
   {{ isa  typschm * id  * (string => string option) * bool }}  
   | val cast_opt id : typschm                           :: S :: val_spec
     {{ com specify the type of an upcoming definition }}
@@ -809,26 +730,16 @@ scattered_def :: 'SD_' ::=
   | end id  :: :: end
 {{ texlong }} {{ com scattered definition end }}
 
-reg_id :: 'RI_' ::=
-  {{ aux _ annot }} {{ auxparam 'a }}
-  | id								:: :: id
-
-alias_spec :: 'AL_' ::=
-  {{ com register alias expression forms }}
-%. Other than where noted, each id must refer to an unaliased register of type vector
-  {{ aux _ annot }} {{ auxparam 'a }}
-  | reg_id . id							:: :: subreg
-  | reg_id [ exp ] 						:: :: bit
-  | reg_id [ exp '..' exp' ]					:: :: slice
-  | reg_id : reg_id'  	    					:: :: concat
+opt_exp :: '' ::= {{ phantom }} {{ lem maybe (exp 'a) }} {{ ocaml 'a exp option }} {{ auxparam 'a }}
+  | exp                                          :: :: opt_exp_some
+  {{ lem (Just [[exp]]) }} {{ ocaml (Some [[exp]]) }}
+  |                                              :: :: opt_exp_none
+  {{ lem Nothing }} {{ ocaml None }}
 
 dec_spec :: 'DEC_' ::=
   {{ com register declarations }}
   {{ aux _ annot }} {{ auxparam 'a }}
-  | register effect effect' typ id                              :: :: reg
-  | register configuration id : typ = exp                       :: :: config
-  | register alias id = alias_spec				:: :: alias
-  | register alias typ id = alias_spec				:: :: typ_alias
+  | register effect effect' typ id = opt_exp                    :: :: reg
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Top-level definitions                                        %
@@ -852,10 +763,16 @@ def :: 'DEF_' ::=
     {{ com function definition }}
   | mapdef                                             :: :: mapdef
     {{ com mapping definition }}
+  | impl funcl                                         :: :: impl
+    {{ com impl definition }}
   | letbind                                            :: :: val
     {{ com value definition }}
   | val_spec                                           :: :: spec
     {{ com top-level type constraint }}
+  | outcome_spec { def1 ... defn }                     :: :: outcome
+    {{ com top-level outcome definition }}
+  | instantiation instantiation_spec with subst1 , ... , substn        :: :: instantiation
+    {{ com instantiation }}
   | fix prec num id                                    :: :: fixity
     {{ com fixity declaration }}
   |  overload id [ id1 ; ... ; idn ]                   :: :: overload

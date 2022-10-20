@@ -13,6 +13,8 @@ jobs:
       run: |
         sudo add-apt-repository ppa:avsm/ppa
         sudo apt update
-        sudo apt install build-essential libgmp-dev z3 m4
+        sudo apt install build-essential libgmp-dev z3 m4 cvc4
         sudo apt install opam
         etc/ci_opam_build.sh
+    - name: Run core tests
+      run: etc/ci_core_tests.sh

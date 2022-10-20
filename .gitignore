@@ -7,7 +7,10 @@
 *.native
 *.byte
 
+*.install
+
 a.out
+*.gch
 
 _build/
 _sbuild/
@@ -41,7 +44,8 @@ lib/hol/sail-heap
 
 # location specific things
 
-/sail
+/doc/code_riscv
+/doc/code_myreplicatebits
 
 /src/sail.docdir
 /src/ast.lem
@@ -53,6 +57,7 @@ lib/hol/sail-heap
 /test/sailtest.pyc
 /test/typecheck/rtpass*/
 /test/typecheck/tests.xml
+/test/latex/out
 /test/lem/Out_lemmas.thy
 /test/lem/out.lem
 /test/lem/out_types.lem
@@ -63,6 +68,7 @@ lib/hol/sail-heap
 /test/c/*.c
 /test/c/*.h
 /test/c/*.result
+/test/c/*.err_result
 /test/c/*.iresult
 /test/c/*.oresult
 /test/c/*.bin

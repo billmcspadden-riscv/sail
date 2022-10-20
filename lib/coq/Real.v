@@ -73,7 +73,7 @@ Require Import Lia.
 Local Open Scope Z.
 
 (* "Decidable" in a classical sense... *)
-Instance Decidable_eq_real : forall (x y : R), Decidable (x = y) :=
+#[export] Instance Decidable_eq_real : forall (x y : R), Decidable (x = y) :=
   Decidable_eq_from_dec Req_dec.
 
 Definition realFromFrac (num denom : Z) : R := Rdiv (IZR num) (IZR denom).
@@ -100,6 +100,7 @@ Definition lt_real (x y : R) : bool := if Rlt_dec x y then true else false.
 
 (* Export select definitions from outside of Rbase *)
 Definition pow_real := powerRZ.
+Definition real_power := powerRZ.
 
 Definition print_real (_ : string) (_ : R) : unit := tt.
 Definition prerr_real (_ : string) (_ : R) : unit := tt.

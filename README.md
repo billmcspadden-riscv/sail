@@ -78,17 +78,11 @@ on Github.  These and the RISC-V model are integrated with our [RMEM](http://www
 
 * [Sail 32-bit RISC-V model, partially handwritten and partially generated](https://github.com/thoughtpolice/rv32-sail). This currently implements a fragment of the machine mode (-M) specification for RV32IM. (Developed independently of the full RISC-V model for the REMS project.)
 
-OPAM Installation
-=================
+Installation
+============
 
 See [INSTALL.md](INSTALL.md) for how
-to install Sail using opam (recommended).
-
-Building
-========
-
-See [BUILDING.md](BUILDING.md) for full details of how to build Sail from source
-with all the required dependencies.
+to install Sail using opam.
 
 Emacs Mode
 ==========
@@ -116,6 +110,13 @@ page press the `+` icon and locate the [editors/vscode/sail](editors/vscode/sail
 directory.
 
 This requires the [TextMate Bundles plugin](https://plugins.jetbrains.com/plugin/7221-textmate-bundles).
+
+Vim
+===
+
+[editors/vim](editors/vim) contains support for syntax highlighting in the vim
+editor, in vim's usual format of an `ftdetect` directory to detect Sail files
+and a `syntax` directory to provide the actual syntax highlighting.
 
 Licensing
 =========

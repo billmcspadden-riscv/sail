@@ -68,6 +68,8 @@
 $ifndef _OPTION
 $define _OPTION
 
+$sail_internal
+
 // The option type is treated specially by the lem backend, so it maps
 // onto the lem maybe type. If the constructors are named differently,
 // this won't work - also no other type should be created with

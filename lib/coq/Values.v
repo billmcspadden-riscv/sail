@@ -81,6 +81,7 @@ Require Import Eqdep_dec.
 Require Export Zeuclid.
 Require Import Lia.
 Import ListNotations.
+Require Import Rbase.  (* TODO would like to avoid this in models without reals *)
 
 
 Local Open Scope Z.
@@ -91,6 +92,11 @@ Definition U := Z.
 Definition eq_dec := Z.eq_dec.
 End Z_eq_dec.
 Module ZEqdep := DecidableEqDep (Z_eq_dec).
+
+(* Opaque identity for bad unchecked operations. *)
+Definition dummy {T:Type} (t:T) : T.
+exact t.
+Qed.
 
 
 (* Constraint solving basics.  A HintDb which unfolding hints and lemmata
@@ -157,7 +163,7 @@ Require Import Coq.Program.Tactics.
 
 Section Morphism.
 Local Obligation Tactic := try solve [simpl_relation | firstorder auto].
-Global Program Instance ArithFactP_iff_morphism :
+#[export] Program Instance ArithFactP_iff_morphism :
   Proper (iff ==> iff) ArithFactP.
 End Morphism.
 
@@ -192,7 +198,7 @@ rewrite <- Decidable_spec.
 destruct Decidable_witness; simpl in *; 
 congruence.
 Qed.
-Instance Decidable_eq_from_dec {T:Type} (eqdec: forall x y : T, {x = y} + {x <> y}) : 
+#[export] Instance Decidable_eq_from_dec {T:Type} (eqdec: forall x y : T, {x = y} + {x <> y}) : 
   forall (x y : T), Decidable (eq x y).
 refine (fun x y => {|
   Decidable_witness := proj1_sig (bool_of_sumbool (eqdec x y))
@@ -200,15 +206,15 @@ refine (fun x y => {|
 destruct (eqdec x y); simpl; split; congruence.
 Defined.
 
-Instance Decidable_eq_unit : forall (x y : unit), Decidable (x = y).
+#[export] Instance Decidable_eq_unit : forall (x y : unit), Decidable (x = y).
 refine (fun x y => {| Decidable_witness := true |}).
 destruct x, y; split; auto.
 Defined.
 
-Instance Decidable_eq_string : forall (x y : string), Decidable (x = y) :=
+#[export] Instance Decidable_eq_string : forall (x y : string), Decidable (x = y) :=
   Decidable_eq_from_dec String.string_dec.
 
-Instance Decidable_eq_pair {A B : Type} `(DA : forall x y : A, Decidable (x = y), DB : forall x y : B, Decidable (x = y)) : forall x y : A*B, Decidable (x = y).
+#[export] Instance Decidable_eq_pair {A B : Type} `(DA : forall x y : A, Decidable (x = y), DB : forall x y : B, Decidable (x = y)) : forall x y : A*B, Decidable (x = y).
 refine (fun x y =>
 {| Decidable_witness := andb (@Decidable_witness _ (DA (fst x) (fst y)))
      (@Decidable_witness _ (DB (snd x) (snd y))) |}).
@@ -237,7 +243,7 @@ refine ((if Decidable_witness as b return (b = true <-> x = y -> _) then fun H' 
 * right. intuition.
 Defined.
 
-Instance Decidable_eq_list {A : Type} `(D : forall x y : A, Decidable (x = y)) : forall (x y : list A), Decidable (x = y) :=
+#[export] Instance Decidable_eq_list {A : Type} `(D : forall x y : A, Decidable (x = y)) : forall (x y : list A), Decidable (x = y) :=
   Decidable_eq_from_dec (list_eq_dec (fun x y => generic_dec x y)).
 
 (* Used by generated code that builds Decidable equality instances for records. *)
@@ -322,7 +328,7 @@ apply ZEuclid.div_mod.
 assumption.
 Qed.
 
-Hint Resolve ZEuclid_div_pos ZEuclid_pos_div ZEuclid_div_ge ZEuclid_div_mod0 : sail.
+#[export] Hint Resolve ZEuclid_div_pos ZEuclid_pos_div ZEuclid_div_ge ZEuclid_div_mod0 : sail.
 
 Lemma Z_geb_ge n m : (n >=? m) = true <-> n >= m.
 rewrite Z.geb_leb.
@@ -520,7 +526,7 @@ Inductive bitU := B0 | B1 | BU.
 
 Scheme Equality for bitU.
 Definition eq_bit := bitU_beq.
-Instance Decidable_eq_bit : forall (x y : bitU), Decidable (x = y) :=
+#[export] Instance Decidable_eq_bit : forall (x y : bitU), Decidable (x = y) :=
   Decidable_eq_from_dec bitU_eq_dec.
 
 Definition showBitU b :=
@@ -546,7 +552,7 @@ Class BitU (a : Type) : Type := {
   of_bitU : bitU -> a
 }.
 
-Instance bitU_BitU : (BitU bitU) := {
+#[export] Instance bitU_BitU : (BitU bitU) := {
   to_bitU b := b;
   of_bitU b := b
 }.
@@ -781,11 +787,10 @@ Definition ext_bits pad len bits :=
   else pad_bitlist pad bits longer.
 
 Definition extz_bits len bits := ext_bits B0 len bits.
-Parameter undefined_list_bitU : list bitU.
+
 Definition exts_bits len bits :=
   match bits with
-  | BU :: _ => undefined_list_bitU (*failwith "exts_bits: undefined bit"*)
-  | B1 :: _ => ext_bits B1 len bits
+  | b :: _ => ext_bits b len bits
   | _ => ext_bits B0 len bits
   end.
 
@@ -793,7 +798,7 @@ Fixpoint add_one_bit_ignore_overflow_aux bits := match bits with
   | [] => []
   | B0 :: bits => B1 :: bits
   | B1 :: bits => B0 :: add_one_bit_ignore_overflow_aux bits
-  | BU :: _ => undefined_list_bitU (*failwith "add_one_bit_ignore_overflow: undefined bit"*)
+  | BU :: _ => dummy bits (*failwith "add_one_bit_ignore_overflow: undefined bit"*)
 end.
 (*declare {isabelle} termination_argument add_one_bit_ignore_overflow_aux = automatic*)
 
@@ -985,23 +990,27 @@ end*)
 
 (*** Machine words *)
 
+(* ISA models tend to use integers for sizes, so Sail's bitvectors are integer
+   indexed.  To avoid carrying around proofs that sizes are non-negative
+   everywhere we define negative sized machine words to be a trivial value. *)
+
 Definition mword (n : Z) :=
   match n with
-  | Zneg _ => False
+  | Zneg _ => word 0
   | Z0 => word 0
   | Zpos p => word (Pos.to_nat p)
   end.
 
 Definition get_word {n} : mword n -> word (Z.to_nat n) :=
   match n with
-  | Zneg _ => fun x => match x with end
+  | Zneg _ => fun x => x
   | Z0 => fun x => x
   | Zpos p => fun x => x
   end.
 
 Definition with_word {n} {P : Type -> Type} : (word (Z.to_nat n) -> P (word (Z.to_nat n))) -> mword n -> P (mword n) :=
 match n with
-| Zneg _ => fun f w => match w with end
+| Zneg _ => fun f w => f w
 | Z0 => fun f w => f w
 | Zpos _ => fun f w => f w
 end.
@@ -1019,34 +1028,9 @@ Definition word_to_mword {n} (w : word (Z.to_nat n)) `{H:ArithFact (n >=? 0)} : 
 (*val length_mword : forall a. mword a -> Z*)
 Definition length_mword {n} (w : mword n) := n.
 
-(*val slice_mword_dec : forall a b. mword a -> Z -> Z -> mword b*)
-(*Definition slice_mword_dec w i j := word_extract (Z.to_nat i) (Z.to_nat j) w.
-
-val slice_mword_inc : forall a b. mword a -> Z -> Z -> mword b
-Definition slice_mword_inc w i j :=
-  let top := (length_mword w) - 1 in
-  slice_mword_dec w (top - i) (top - j)
-
-val slice_mword : forall a b. bool -> mword a -> Z -> Z -> mword b
-Definition slice_mword is_inc w i j := if is_inc then slice_mword_inc w i j else slice_mword_dec w i j
-
-val update_slice_mword_dec : forall a b. mword a -> Z -> Z -> mword b -> mword a
-Definition update_slice_mword_dec w i j w' := word_update w (Z.to_nat i) (Z.to_nat j) w'
-
-val update_slice_mword_inc : forall a b. mword a -> Z -> Z -> mword b -> mword a
-Definition update_slice_mword_inc w i j w' :=
-  let top := (length_mword w) - 1 in
-  update_slice_mword_dec w (top - i) (top - j) w'
-
-val update_slice_mword : forall a b. bool -> mword a -> Z -> Z -> mword b -> mword a
-Definition update_slice_mword is_inc w i j w' :=
-  if is_inc then update_slice_mword_inc w i j w' else update_slice_mword_dec w i j w'
-
-val access_mword_dec : forall a. mword a -> Z -> bitU*)
-Parameter undefined_bit : bool.
 Definition getBit {n} :=
 match n with
-| O => fun (w : word O) i => undefined_bit
+| O => fun (w : word O) i => dummy false
 | S n => fun (w : word (S n)) i => wlsb (wrshift' w i)
 end.
 
@@ -1090,7 +1074,7 @@ Definition update_mword {a} (is_inc : bool) (w : mword a) n b :=
   if is_inc then update_mword_inc w n b else update_mword_dec w n b.
 
 (*val int_of_mword : forall 'a. bool -> mword 'a -> integer*)
-Definition int_of_mword {a} `{ArithFact (a >=? 0)} (sign : bool) (w : mword a) :=
+Definition int_of_mword {a} (sign : bool) (w : mword a) :=
   if sign then wordToZ (get_word w) else Z.of_N (wordToN (get_word w)).
 
 
@@ -1099,17 +1083,12 @@ Definition mword_of_int len n :=
   let w := wordFromInteger n in
   if (length_mword w = len) then w else failwith "unexpected word length"
 *)
-Program Definition mword_of_int {len} `{H:ArithFact (len >=? 0)} n : mword len :=
+Definition mword_of_int {len} n : mword len :=
 match len with
-| Zneg _ => _
+| Zneg _ => WO
 | Z0 => ZToWord 0 n
 | Zpos p => ZToWord (Pos.to_nat p) n
 end.
-Next Obligation.
-destruct H as [H].
-unfold Z.geb, Z.compare in H.
-discriminate.
-Defined.
 
 (*
 (* Translating between a type level number (itself n) and an integer *)
@@ -1155,33 +1134,6 @@ Local Close Scope nat.
 
 (*** Bitvectors *)
 
-Class Bitvector (a:Type) : Type := {
-  bits_of : a -> list bitU;
-  of_bits : list bitU -> option a;
-  of_bools : list bool -> a;
-  (* The first parameter specifies the desired length of the bitvector *)
-  of_int : Z -> Z -> a;
-  length : a -> Z;
-  unsigned : a -> option Z;
-  signed : a -> option Z;
-  arith_op_bv : (Z -> Z -> Z) -> bool -> a -> a -> a
-}.
-
-Instance bitlist_Bitvector {a : Type} `{BitU a} : (Bitvector (list a)) := {
-  bits_of v := List.map to_bitU v;
-  of_bits v := Some (List.map of_bitU v);
-  of_bools v := List.map of_bitU (List.map bitU_of_bool v);
-  of_int len n := List.map of_bitU (bits_of_int len n);
-  length := length_list;
-  unsigned v := unsigned_of_bits (List.map to_bitU v);
-  signed v := signed_of_bits (List.map to_bitU v);
-  arith_op_bv op sign l r := List.map of_bitU (arith_op_bits op sign (List.map to_bitU l) (List.map to_bitU r))
-}.
-
-Class ReasonableSize (a : Z) : Prop := {
-  isPositive : a >=? 0 = true
-}.
-
 (* Definitions in the context that involve proof for other constraints can
    break some of the constraint solving tactics, so prune definition bodies
    down to integer types. *)
@@ -1203,13 +1155,6 @@ destruct (Bool.bool_dec l r) as [e | ne].
 * exists true; tauto.
 Qed.
 
-Lemma ArithFact_mword (a : Z) (w : mword a) : ArithFact (a >=? 0).
-constructor.
-destruct a.
-* auto with zarith.
-* auto using Z.le_ge, Zle_0_pos.
-* destruct w.
-Qed.
 (* Remove constructor from ArithFact(P)s and if they're used elsewhere
    in the context create a copy that rewrites will work on. *)
 Ltac unwrap_ArithFacts :=
@@ -1574,12 +1519,10 @@ Ltac clean_up_props :=
 Ltac prepare_for_solver :=
 (*dump_context;*)
  generalize_embedded_proofs;
- clear_irrelevant_defns;
  clear_non_Z_bool_defns;
  autounfold with sail in * |- *; (* You can add Hint Unfold ... : sail to let lia see through fns *)
  split_cases;
  extract_properties;
- repeat match goal with w:mword ?n |- _ => apply ArithFact_mword in w end;
  unwrap_ArithFacts;
  destruct_exists;
  unbool_comparisons;
@@ -1968,8 +1911,7 @@ Ltac sail_extra_tactic := fail.
 
 Ltac main_solver :=
  solve
- [ apply ArithFact_mword; assumption
- | z_comparisons
+ [ z_comparisons
  | lia
    (* Try sail hints before dropping the existential *)
  | subst; eauto 3 with zarith sail
@@ -2218,6 +2160,7 @@ Ltac clear_proof_bodies :=
 
 Ltac solve_arithfact :=
   clear_proof_bodies;
+  clear_irrelevant_defns;
   try solve [squashed_andor_solver]; (* Do this first so that it can name the intros *)
   intros; (* To solve implications for derive_m *)
   clear_fixpoints; (* Avoid using recursive calls *)
@@ -2241,74 +2184,26 @@ Ltac solve_arithfact :=
    slow running constraints into proof mode. *)
 Ltac run_solver := solve_arithfact.
 
-Hint Extern 0 (ArithFact _) => run_solver : typeclass_instances.
-Hint Extern 0 (ArithFactP _) => run_solver : typeclass_instances.
+#[export] Hint Extern 0 (ArithFact _) => run_solver : typeclass_instances.
+#[export] Hint Extern 0 (ArithFactP _) => run_solver : typeclass_instances.
 
-Hint Unfold length_mword : sail.
+#[export] Hint Unfold length_mword : sail.
 
 Lemma unit_comparison_lemma : true = true <-> True.
 intuition.
 Qed.
-Hint Resolve unit_comparison_lemma : sail.
+#[export] Hint Resolve unit_comparison_lemma : sail.
 
 Definition neq_atom (x : Z) (y : Z) : bool := negb (Z.eqb x y).
-Hint Unfold neq_atom : sail.
-
-Lemma ReasonableSize_witness (a : Z) (w : mword a) : ReasonableSize a.
-constructor.
-destruct a.
-* auto with zarith.
-* auto using Z.le_ge, Zle_0_pos.
-* destruct w.
-Qed.
-
-Hint Extern 0 (ReasonableSize ?A) => (unwrap_ArithFacts; solve [apply ReasonableSize_witness; assumption | constructor; auto with zarith]) : typeclass_instances.
+#[export] Hint Unfold neq_atom : sail.
 
 Definition to_range (x : Z) : {y : Z & ArithFact ((x <=? y <=? x))} := build_ex x.
-
-Instance mword_Bitvector {a : Z} `{ArithFact (a >=? 0)} : (Bitvector (mword a)) := {
-  bits_of v := List.map bitU_of_bool (bitlistFromWord (get_word v));
-  of_bits v := option_map (fun bl => to_word isPositive (fit_bbv_word (wordFromBitlist bl))) (just_list (List.map bool_of_bitU v));
-  of_bools v := to_word isPositive (fit_bbv_word (wordFromBitlist v));
-  of_int len z := mword_of_int z; (* cheat a little *)
-  length v := a;
-  unsigned v := Some (Z.of_N (wordToN (get_word v)));
-  signed v := Some (wordToZ (get_word v));
-  arith_op_bv op sign l r := mword_of_int (op (int_of_mword sign l) (int_of_mword sign r))
-}.
-
-Section Bitvector_defs.
-Context {a b} `{Bitvector a} `{Bitvector b}.
 
 Definition opt_def {a} (def:a) (v:option a) :=
 match v with
 | Some x => x
 | None => def
 end.
-
-(* The Lem version is partial, but lets go with BU here to avoid constraints for now *)
-Definition access_bv_inc (v : a) n := opt_def BU (access_list_opt_inc (bits_of v) n).
-Definition access_bv_dec (v : a) n := opt_def BU (access_list_opt_dec (bits_of v) n).
-
-Definition update_bv_inc (v : a) n b := update_list true  (bits_of v) n b.
-Definition update_bv_dec (v : a) n b := update_list false (bits_of v) n b.
-
-Definition subrange_bv_inc (v : a) i j := subrange_list true  (bits_of v) i j.
-Definition subrange_bv_dec (v : a) i j := subrange_list true  (bits_of v) i j.
-
-Definition update_subrange_bv_inc (v : a) i j (v' : b) := update_subrange_list true  (bits_of v) i j (bits_of v').
-Definition update_subrange_bv_dec (v : a) i j (v' : b) := update_subrange_list false (bits_of v) i j (bits_of v').
-
-(*val extz_bv : forall a b. Bitvector a, Bitvector b => Z -> a -> b*)
-Definition extz_bv n (v : a) : option b := of_bits (extz_bits n (bits_of v)).
-
-(*val exts_bv : forall a b. Bitvector a, Bitvector b => Z -> a -> b*)
-Definition exts_bv n (v : a) : option b := of_bits (exts_bits n (bits_of v)).
-
-(*val string_of_bv : forall a. Bitvector a => a -> string *)
-Definition string_of_bv v := show_bitlist (bits_of v).
-
-End Bitvector_defs.
 
 (*** Bytes and addresses *)
 
@@ -2326,19 +2221,23 @@ Fixpoint byte_chunks {a} (bs : list a) := match bs with
 end.
 (*declare {isabelle} termination_argument byte_chunks = automatic*)
 
-Section BytesBits.
-Context {a} `{Bitvector a}.
+Definition bits_of {n} (v : mword n) := List.map bitU_of_bool (bitlistFromWord (get_word v)).
+Lemma isPositive {n} `{ArithFact (n >=? 0)} : n >=? 0 = true.
+destruct H.
+assumption.
+Qed.
+Definition of_bits {n} v `{ArithFact (n >=? 0)} : option (mword n) := option_map (fun bl => to_word isPositive (fit_bbv_word (wordFromBitlist bl))) (just_list (List.map bool_of_bitU v)).
+Definition of_bools {n} v `{ArithFact (n >=? 0)} : mword n := to_word isPositive (fit_bbv_word (wordFromBitlist v)).
+
 
 (*val bytes_of_bits : forall a. Bitvector a => a -> option (list memory_byte)*)
-Definition bytes_of_bits (bs : a) := byte_chunks (bits_of bs).
+Definition bytes_of_bits {n} (bs : mword n) := byte_chunks (bits_of bs).
 
 (*val bits_of_bytes : forall a. Bitvector a => list memory_byte -> a*)
-Definition bits_of_bytes (bs : list memory_byte) : list bitU := List.concat (List.map bits_of bs).
+Definition bits_of_bytes (bs : list memory_byte) : list bitU := List.concat (List.map (List.map to_bitU) bs).
 
-Definition mem_bytes_of_bits (bs : a) := option_map (@rev (list bitU)) (bytes_of_bits bs).
+Definition mem_bytes_of_bits {n} (bs : mword n) := option_map (@rev (list bitU)) (bytes_of_bits bs).
 Definition bits_of_mem_bytes (bs : list memory_byte) := bits_of_bytes (List.rev bs).
-
-End BytesBits.
 
 (*val bitv_of_byte_lifteds : list Sail_impl_base.byte_lifted -> list bitU
 Definition bitv_of_byte_lifteds v :=
@@ -2562,9 +2461,25 @@ Definition external_mem_value v :=
 val internal_mem_value : memory_value -> list bitU
 Definition internal_mem_value bytes :=
   List.reverse bytes $> bitv_of_byte_lifteds*)
+*)
+
+(* The choice operations in the monads operate on a small selection of base
+   types.  Normally, -undefined_gen is used to construct functions for more
+   complex types. *)
+
+Inductive ChooseType : Type :=
+  | ChooseBool | ChooseBit | ChooseInt | ChooseNat | ChooseReal | ChooseString
+  | ChooseRange (lo hi : Z) | ChooseBitvector (n:Z).
+Scheme Equality for ChooseType.
+Definition choose_type ty :=
+  match ty with
+  | ChooseBool => bool | ChooseBit => bitU | ChooseInt => Z | ChooseNat => {n : Z & ArithFact (n >=? 0)}
+  | ChooseReal => R | ChooseString => string
+  | ChooseRange _ _ => Z | ChooseBitvector n => mword n
+  end.
 
 
-val foreach : forall a vars.
+(*val foreach : forall a vars.
   (list a) -> vars -> (a -> vars -> vars) -> vars*)
 Fixpoint foreach {a Vars} (l : list a) (vars : Vars) (body : a -> Vars -> Vars) : Vars :=
 match l with
@@ -2859,7 +2774,7 @@ refine (if List.list_eq_dec D (projT1 x) (projT1 y) then left _ else right _).
 * contradict n0. rewrite n0. reflexivity.
 Defined.
 
-Instance Decidable_eq_vec {T : Type} {n} `(DT : forall x y : T, Decidable (x = y)) :
+#[export] Instance Decidable_eq_vec {T : Type} {n} `(DT : forall x y : T, Decidable (x = y)) :
   forall x y : vec T n, Decidable (x = y).
 refine (fun x y => {|
   Decidable_witness := proj1_sig (bool_of_sumbool (vec_eq_dec (fun x y => generic_dec x y) x y))
@@ -2953,8 +2868,8 @@ apply Z.le_ge.
 apply <- Z.shiftl_nonneg.
 lia.
 Qed.
-Hint Resolve shl_8_ge_0 : sail.
-
+(* #[export] Hint Resolve shl_8_ge_0 : sail.
+ *)
 (* Limits for remainders *)
 
 Require Zquot.
@@ -2973,7 +2888,7 @@ subst.
 apply Z.rem_bound_pos; auto with zarith.
 Qed.
 
-Hint Resolve Z_rem_really_nonneg Z_rem_pow_upper_bound : sail.
+#[export] Hint Resolve Z_rem_really_nonneg Z_rem_pow_upper_bound : sail.
 
 (* This is needed because Sail's internal constraint language doesn't have
    < and could disappear if we add it... *)
@@ -2982,14 +2897,14 @@ Lemma sail_lt_ge (x y : Z) :
   x < y <-> y >= x +1.
 lia.
 Qed.
-Hint Resolve sail_lt_ge : sail.
+#[export] Hint Resolve sail_lt_ge : sail.
 
 
 (* Override expensive unary exponential notation for binary, fill in sizes too *)
 Notation "sz ''b' a" := (Word.NToWord sz (BinNotation.bin a)) (at level 50).
 Notation "''b' a" := (Word.NToWord _ (BinNotation.bin a) :
                        mword (ltac:(let sz := eval cbv in (Z.of_nat (String.length a)) in exact sz)))
-                     (at level 50).
+                     (at level 50, only parsing).
 Notation "'Ox' a" := (NToWord _ (hex a) :
                        mword (ltac:(let sz := eval cbv in (4 * (Z.of_nat (String.length a))) in exact sz)))
-                     (at level 50).
+                     (at level 50, only parsing).

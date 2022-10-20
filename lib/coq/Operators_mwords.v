@@ -66,7 +66,6 @@
 (*==========================================================================*)
 
 Require Import Sail.Values.
-Require Import Sail.Operators.
 Require Import Sail.Prompt_monad.
 Require Import Sail.Prompt.
 Require Import bbv.Word.
@@ -151,6 +150,28 @@ intro eq.
 exfalso. destruct m; simpl in *; congruence.
 Defined.
 
+(* To avoid carrying around proofs that bitvector sizes are correct everywhere,
+   we extend many operations to cover nonsensical sizes.  To help, we have a
+   family of dummy mwords that are opaque - well typed Sail code reduction
+   should never reach this definition. *)
+
+Definition dummy_mword {n : Z} : mword n.
+refine (
+  match n with
+  | Zpos _ => wzero _
+  | _ => WO
+  end
+).
+Qed.
+
+Definition fit_mword {a b : Z} (v : mword a) : mword b :=
+  match Z.eq_dec a b with
+  | left e => match e with eq_refl => v end
+  | right _ => dummy_mword
+  end.
+
+Definition fit_word {a : nat} {b : Z} (v : word a) : mword b := fit_mword (cast_to_mword v eq_refl).
+
 (*
 (* Specialisation of operators to machine words *)
 
@@ -193,7 +214,7 @@ repeat rewrite Z2Nat.id; lia.
 apply Z2Nat.inj_le; lia.
 Qed.
 
-Definition subrange_vec_dec {n} (v : mword n) m o `{ArithFact (0 <=? o)} `{ArithFact (o <=? m <? n)} : mword (m - o + 1) :=
+Definition subrange_vec_dec_precise {n} (v : mword n) m o `{ArithFact (0 <=? o)} `{ArithFact (o <=? m <? n)} : mword (m - o + 1) :=
   let n := Z.to_nat n in
   let m := Z.to_nat m in
   let o := Z.to_nat o in
@@ -203,18 +224,10 @@ Definition subrange_vec_dec {n} (v : mword n) m o `{ArithFact (0 <=? o)} `{Arith
                         (cast_word (split1 (m+1) (n-(m+1)) (cast_word w (subrange_lemma1 prf)))
                                    (subrange_lemma2 prf))) subrange_lemma3.
 
-Definition subrange_vec_inc {n} (v : mword n) m o `{ArithFact (0 <=? m)} `{ArithFact (m <=? o <? n)} : mword (o - m + 1) := autocast (subrange_vec_dec v (n-1-m) (n-1-o)).
+Definition subrange_vec_dec {n} (v : mword n) m o : mword (m - o + 1) :=
+  if sumbool_of_bool (andb (0 <=? o) (o <=? m <? n)) then subrange_vec_dec_precise v m o else dummy_mword.
 
-(* TODO: get rid of bogus default *)
-Parameter dummy_vector : forall {n} `{ArithFact (n >=? 0)}, mword n.
-
-(*val update_subrange_vec_inc : forall 'a 'b. Size 'a, Size 'b => mword 'a -> integer -> integer -> mword 'b -> mword 'a*)
-Definition update_subrange_vec_inc_unchecked {a b} (v : mword a) i j (w : mword b) : mword a :=
-  opt_def dummy_vector (of_bits (update_subrange_bv_inc v i j w)).
-
-(*val update_subrange_vec_dec : forall 'a 'b. Size 'a, Size 'b => mword 'a -> integer -> integer -> mword 'b -> mword 'a*)
-Definition update_subrange_vec_dec_unchecked {a b} (v : mword a) i j (w : mword b) : mword a :=
-  opt_def dummy_vector (of_bits (update_subrange_bv_dec v i j w)).
+Definition subrange_vec_inc {n} (v : mword n) m o : mword (o - m + 1) := autocast (subrange_vec_dec v (n-1-m) (n-1-o)).
 
 Lemma update_subrange_vec_dec_pf {o m n} :
 ArithFact (0 <=? o) ->
@@ -251,49 +264,33 @@ refine (
   cast_to_mword z (update_subrange_vec_dec_pf _ _)).
 Defined.
 
+Definition update_subrange_vec_dec_unchecked {a b} (v : mword a) i j (w : mword b) : mword a :=
+  if sumbool_of_bool ((0 <=? j) && (j <=? i) && (i <? a) && (b =? i - j + 1))%bool then update_subrange_vec_dec v i j (autocast w) else dummy v.
+
 Definition update_subrange_vec_inc {n} (v : mword n) m o `{ArithFact (0 <=? m)} `{ArithFact (m <=? o <? n)} (w : mword (o - (m - 1))) : mword n := update_subrange_vec_dec v (n-1-m) (n-1-o) (autocast w).
 
-Lemma mword_nonneg {a} : mword a -> a >= 0.
-destruct a.
-1,2: auto using Z.le_ge, Zle_0_pos with zarith.
-destruct 1.
-Qed.
-
 (*val extz_vec : forall 'a 'b. Size 'a, Size 'b => integer -> mword 'a -> mword 'b*)
-Definition extz_vec {a b} `{ArithFact (b >=? a)} (n : Z) (v : mword a) : mword b.
-refine (cast_to_mword (Word.zext (get_word v) (Z.to_nat (b - a))) _).
-unwrap_ArithFacts.
-unbool_comparisons.
-assert (a >= 0). { apply mword_nonneg. assumption. }
-rewrite <- Z2Nat.inj_add; [ | lia | lia ].
-rewrite Zplus_minus.
-apply Z2Nat.id.
-auto with zarith.
-Defined.
+Definition extz_vec {a b} (n : Z) (v : mword a) : mword b :=
+  fit_word (Word.zext (get_word v) (Z.to_nat (b - a))).
 
 (*val exts_vec : forall 'a 'b. Size 'a, Size 'b => integer -> mword 'a -> mword 'b*)
-Definition exts_vec {a b} `{ArithFact (b >=? a)} (n : Z) (v : mword a) : mword b.
-refine (cast_to_mword (Word.sext (get_word v) (Z.to_nat (b - a))) _).
-unwrap_ArithFacts.
-unbool_comparisons.
-assert (a >= 0). { apply mword_nonneg. assumption. }
-rewrite <- Z2Nat.inj_add; [ | lia | lia ].
-rewrite Zplus_minus.
-apply Z2Nat.id.
-auto with zarith.
-Defined.
+Definition exts_vec {a b} (n : Z) (v : mword a) : mword b :=
+  fit_word (Word.sext (get_word v) (Z.to_nat (b - a))).
 
-Definition zero_extend {a} (v : mword a) (n : Z) `{ArithFact (n >=? a)} : mword n := extz_vec n v.
+Definition zero_extend {a} (v : mword a) (n : Z) : mword n := extz_vec n v.
 
-Definition sign_extend {a} (v : mword a) (n : Z) `{ArithFact (n >=? a)} : mword n := exts_vec n v.
+Definition sign_extend {a} (v : mword a) (n : Z) : mword n := exts_vec n v.
 
-Definition zeros (n : Z) `{ArithFact (n >=? 0)} : mword n.
-refine (cast_to_mword (Word.wzero (Z.to_nat n)) _).
-unwrap_ArithFacts.
-unbool_comparisons.
-apply Z2Nat.id.
-auto with zarith.
-Defined.
+Definition dummy_Zneg (p : positive) : mword (Zneg p).
+constructor.
+Qed.
+
+Definition zeros (n : Z) : mword n :=
+  match n with
+  | Zneg p => dummy_Zneg p
+  | Z0 => Word.WO
+  | Zpos p => Word.wzero (Pos.to_nat p)
+  end.
 
 Lemma truncate_eq {m n} : m >= 0 -> m <= n -> (Z.to_nat n = Z.to_nat m + (Z.to_nat n - Z.to_nat m))%nat.
 intros.
@@ -327,10 +324,9 @@ rewrite Z2Nat.id. 2: solve [ auto with zarith ].
 rewrite Z2Nat.id; auto with zarith.
 Qed.
 
-
 (*val concat_vec : forall 'a 'b 'c. Size 'a, Size 'b, Size 'c => mword 'a -> mword 'b -> mword 'c*)
 Definition concat_vec {a b} (v : mword a) (w : mword b) : mword (a + b) :=
- cast_to_mword (Word.combine (get_word w) (get_word v)) (ltac:(solve [auto using concat_eq, mword_nonneg with zarith]) : Z.of_nat (Z.to_nat b + Z.to_nat a)%nat = a + b).
+ fit_word (Word.combine (get_word w) (get_word v)).
 
 (*val cons_vec : forall 'a 'b 'c. Size 'a, Size 'b => bitU -> mword 'a -> mword 'b*)
 (*Definition cons_vec {a b} : bitU -> mword a -> mword b := cons_bv.*)
@@ -360,31 +356,39 @@ Qed.
 Definition uint_plain {a} (x : mword a) : Z :=
   Z.of_N (Word.wordToN (get_word x)).
 
-Program Definition uint {a} (x : mword a) : {z : Z & ArithFact (0 <=? z <=? 2 ^ a - 1)} :=
+Lemma max_of_N {n} : Z.max (Z.of_N n) 0 = Z.of_N n.
+destruct n; auto.
+Qed.
+
+Program Definition uint {a} (x : mword a) : {z : Z & ArithFact (0 <=? z <=? Z.max (2 ^ a - 1) 0)} :=
  existT _ (uint_plain x) _.
 Next Obligation.
 constructor.
 apply Bool.andb_true_iff.
 constructor.
 * apply Z.leb_le. apply N2Z.is_nonneg.
-* apply Z.leb_le.
-  assert (2 ^ a - 1 = Z.of_N (2 ^ (Z.to_N a) - 1)). {
-    rewrite N2Z.inj_sub.
-    * rewrite N2Z.inj_pow.
-      rewrite Z2N.id. solve [ auto ].
-      destruct a. 1,2: auto with zarith. destruct x.
-    * apply N.le_trans with (m := (2^0)%N). solve [ auto using N.le_refl ].
-      apply N.pow_le_mono_r.
-      inversion 1.
-      apply N.le_0_l.
-  }
-  rewrite H.
-  apply N2Z.inj_le.
-  rewrite N.sub_1_r.
-  apply N.lt_le_pred.
-  rewrite <- Z_nat_N.
-  rewrite Npow2_pow.
-  apply Word.wordToN_bound.
+* destruct a.
+  - simpl in * |- *. shatter_word x. reflexivity.
+  - apply Z.leb_le.
+    assert (2 ^ (Z.pos p) - 1 = Z.of_N (2 ^ (Z.to_N (Z.pos p)) - 1)). {
+      rewrite N2Z.inj_sub.
+      * rewrite N2Z.inj_pow.
+        rewrite Z2N.id. solve [ auto ].
+        lia.
+      * apply N.le_trans with (m := (2^0)%N). solve [ auto using N.le_refl ].
+        apply N.pow_le_mono_r.
+        inversion 1.
+        apply N.le_0_l.
+    }
+    rewrite H.
+    rewrite max_of_N.
+    apply N2Z.inj_le.
+    rewrite N.sub_1_r.
+    apply N.lt_le_pred.
+    rewrite <- Z_nat_N.
+    rewrite Npow2_pow.
+    apply Word.wordToN_bound.
+  - simpl in * |- *. shatter_word x. reflexivity.
 Defined.
 
 Lemma Zpow_pow2 {n} : 2 ^ Z.of_nat n = Z.of_nat (pow2 n).
@@ -431,9 +435,11 @@ Lemma length_list_pos : forall {A} {l:list A}, 0 <= Z.of_nat (List.length l).
 unfold length_list.
 auto with zarith.
 Qed.
-Hint Resolve length_list_pos : sail.
+#[export] Hint Resolve length_list_pos : sail.
 
-Definition vec_of_bits (l:list bitU) : mword (length_list l) := opt_def dummy_vector (of_bits l).
+Definition bool_of_bit b := match b with B0 => false | B1 => true | BU => dummy false end.
+
+Definition vec_of_bits (l:list bitU) : mword (length_list l) := of_bools (List.map bool_of_bit l).
 (*
 
 val msb : forall 'a. Size 'a => mword 'a -> bitU
@@ -442,8 +448,8 @@ Definition msb := most_significant
 val int_of_vec : forall 'a. Size 'a => bool -> mword 'a -> integer
 Definition int_of_vec := int_of_bv
 
-val string_of_vec : forall 'a. Size 'a => mword 'a -> string*)
-Definition string_of_bits {n} (w : mword n) : string := string_of_bv w.
+*)
+
 Definition with_word' {n} (P : Type -> Type) : (forall n, Word.word n -> P (Word.word n)) -> mword n -> P (mword n) := fun f w => @with_word n _ (f (Z.to_nat n)) w.
 Definition word_binop {n} (f : forall n, Word.word n -> Word.word n -> Word.word n) : mword n -> mword n -> mword n := with_word' (fun x => x -> x) f.
 Definition word_unop {n} (f : forall n, Word.word n -> Word.word n) : mword n -> mword n := with_word' (fun x => x) f.
@@ -467,9 +473,9 @@ val smult_vec : forall 'a 'b. Size 'a, Size 'b => mword 'a -> mword 'a -> mword 
 Definition add_vec   {n} : mword n -> mword n -> mword n := word_binop Word.wplus.
 (*Definition sadd_vec  {n} : mword n -> mword n -> mword n := sadd_bv w.*)
 Definition sub_vec   {n} : mword n -> mword n -> mword n := word_binop Word.wminus.
-Definition mult_vec  {n m} `{ArithFact (m >=? n)} (l : mword n) (r : mword n) : mword m :=
+Definition mult_vec  {n m} (l : mword n) (r : mword n) : mword m :=
   word_binop Word.wmult (zero_extend l _) (zero_extend r _).
-Definition mults_vec  {n m} `{ArithFact (m >=? n)} (l : mword n) (r : mword n) : mword m :=
+Definition mults_vec  {n m} (l : mword n) (r : mword n) : mword m :=
   word_binop Word.wmult (sign_extend l _) (sign_extend r _).
 
 (*val add_vec_int   : forall 'a. Size 'a => mword 'a -> integer -> mword 'a
@@ -477,9 +483,8 @@ val sadd_vec_int  : forall 'a. Size 'a => mword 'a -> integer -> mword 'a
 val sub_vec_int   : forall 'a. Size 'a => mword 'a -> integer -> mword 'a
 val mult_vec_int  : forall 'a 'b. Size 'a, Size 'b => mword 'a -> integer -> mword 'b
 val smult_vec_int : forall 'a 'b. Size 'a, Size 'b => mword 'a -> integer -> mword 'b*)
-Definition add_vec_int   {a} (l : mword a) (r : Z) : mword a := arith_op_bv_int Z.add   false l r.
-Definition sadd_vec_int  {a} (l : mword a) (r : Z) : mword a := arith_op_bv_int Z.add   true  l r.
-Definition sub_vec_int   {a} (l : mword a) (r : Z) : mword a := arith_op_bv_int Z.sub   false l r.
+Definition add_vec_int   {a} (l : mword a) (r : Z) : mword a := add_vec l (mword_of_int r).
+Definition sub_vec_int   {a} (l : mword a) (r : Z) : mword a := sub_vec l (mword_of_int r).
 (*Definition mult_vec_int  {a b} : mword a -> Z -> mword b := mult_bv_int.
 Definition smult_vec_int {a b} : mword a -> Z -> mword b := smult_bv_int.*)
 
@@ -562,7 +567,7 @@ rewrite Z2Nat.inj_mul. 2,3: solve [ auto with zarith ].
 rewrite Nat.mul_comm. reflexivity.
 Qed.
 Definition replicate_bits {a} (w : mword a) (n : Z) `{ArithFact (n >=? 0)} : mword (a * n) :=
- cast_to_mword (replicate_bits_aux (get_word w) (Z.to_nat n)) replicate_ok.
+ fit_word (replicate_bits_aux (get_word w) (Z.to_nat n)).
 
 (*val duplicate : forall 'a. Size 'a => bitU -> integer -> mword 'a
 Definition duplicate := duplicate_bit_bv
@@ -593,12 +598,12 @@ Lemma eq_vec_true_iff {n} (v w : mword n) :
   eq_vec v w = true <-> v = w.
 unfold eq_vec.
 destruct n.
-* simpl in v,w. shatter_word v. shatter_word w.
-  compute. intuition.
+1,3:
+  simpl in v,w; shatter_word v; shatter_word w;
+  compute; intuition.
 * simpl in *. destruct (weq v w).
   + subst. rewrite weqb_eq; tauto.
   + rewrite weqb_ne; auto. split; congruence.
-* destruct v.
 Qed.
 
 Lemma eq_vec_false_iff {n} (v w : mword n) :
@@ -612,18 +617,14 @@ split.
 * auto.
 Qed.
 
-Definition eq_vec_dec {n} : forall (x y : mword n), {x = y} + {x <> y}.
-refine (match n with
-| Z0 => _
-| Zpos m => _
-| Zneg m => _
-end).
-* simpl. apply Word.weq.
-* simpl. apply Word.weq.
-* simpl. destruct x.
-Defined.
+Definition eq_vec_dec {n} : forall (x y : mword n), {x = y} + {x <> y} :=
+  match n with
+  | Z0 => @Word.weq _
+  | Zpos m => @Word.weq _
+  | Zneg m => @Word.weq _
+  end.
 
-Instance Decidable_eq_mword {n} : forall (x y : mword n), Decidable (x = y) :=
+#[export] Instance Decidable_eq_mword {n} : forall (x y : mword n), Decidable (x = y) :=
   Decidable_eq_from_dec eq_vec_dec.
 
 Program Fixpoint reverse_endianness_word {n} (bits : word n) : word n :=
@@ -640,7 +641,10 @@ Qed.
 
 Definition reverse_endianness {n} (bits : mword n) := with_word (P := id) reverse_endianness_word bits.
 
-Definition get_slice_int {a} `{ArithFact (a >=? 0)} : Z -> Z -> Z -> mword a := get_slice_int_bv.
+Definition get_slice_int {a} `{ArithFact (a >=? 0)} (len : Z) (n : Z) (lo : Z) : mword a :=
+  let hi := lo + len - 1 in
+  let bs := bools_of_int (hi + 1) n in
+  of_bools (subrange_list false bs hi lo).
 
 Definition set_slice n m (v : mword n) x (w : mword m) : mword n :=
   update_subrange_vec_dec_unchecked v (x + m - 1) x w.

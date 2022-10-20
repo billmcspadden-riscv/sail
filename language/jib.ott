@@ -151,6 +151,9 @@ ctyp :: 'CT_' ::=
 % floating point.
   | real                      :: :: real
 
+  | float nat                 :: :: float
+  | rounding_mode             :: :: rounding_mode
+
   | ( ctyp0 , ... , ctypn )   :: :: tup
 
 % Abstractly represent how all the Sail user defined types get mapped
@@ -180,9 +183,9 @@ clexp :: 'CL_' ::=
 
 ctype_def :: 'CTD_' ::=
   {{ com C type definition }}
-  | enum id = id0 '|' ... '|' idn                       :: :: enum
-  | struct id = { uid0 : ctyp0 , ... , uidn : ctypn }   :: :: struct
-  | variant id  = { uid0 : ctyp0 , ... , uidn : ctypn } :: :: variant
+  | enum id = id0 '|' ... '|' idn                      :: :: enum
+  | struct id = { uid0 : ctyp0 , ... , uidn : ctypn }  :: :: struct
+  | variant id = { uid0 : ctyp0 , ... , uidn : ctypn } :: :: variant
 
 iannot :: '' ::=
   {{ lem nat * nat * nat }}
@@ -201,7 +204,7 @@ instr :: 'I_' ::=
   | clexp = cval                                   :: :: copy
   | clear ctyp name                                :: :: clear
   | undefined ctyp                                 :: :: undefined
-  | match_failure                                  :: :: match_failure
+  | exit string                                    :: :: exit
   | end name                                       :: :: end
 
 % All instructions containing nested instructions can be flattened
@@ -261,3 +264,6 @@ cdef :: 'CDEF_' ::=
   | finish id {
       instr0 ; ... ; instrn
     } :: :: finish
+
+% Directive preserved from Sail
+  | $ string1 string2 :: :: pragma

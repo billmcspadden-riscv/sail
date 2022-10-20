@@ -98,6 +98,14 @@ match l with
   foreachM xs vars body
 end.
 
+Fixpoint foreachE {a Vars e} (l : list a) (vars : Vars) (body : a -> Vars -> e + Vars) : e + Vars :=
+match l with
+| [] => inr vars
+| (x :: xs) =>
+  body x vars >>$= fun vars =>
+  foreachE xs vars body
+end.
+
 Fixpoint foreach_ZM_up' {rv e Vars} (from to step off : Z) (n : nat) `{ArithFact (0 <? step)} `{ArithFact (0 <=? off)} (vars : Vars) (body : forall (z : Z) `(ArithFact (from <=? z <=? to)), Vars -> monad rv Vars e) {struct n} : monad rv Vars e.
 exact (
   if sumbool_of_bool (from + off <=? to) then
@@ -106,6 +114,16 @@ exact (
     | S n => body (from + off) _ vars >>= fun vars => foreach_ZM_up' rv e Vars from to step (off + step) n _ _ vars body
     end
   else returnm vars).
+Defined.
+
+Fixpoint foreach_ZE_up' {e Vars} (from to step off : Z) (n : nat) `{ArithFact (0 <? step)} `{ArithFact (0 <=? off)} (vars : Vars) (body : forall (z : Z) `(ArithFact (from <=? z <=? to)), Vars -> e + Vars) {struct n} : e + Vars.
+exact (
+  if sumbool_of_bool (from + off <=? to) then
+    match n with
+    | O => inr vars
+    | S n => body (from + off) _ vars >>$= fun vars => foreach_ZE_up' e Vars from to step (off + step) n _ _ vars body
+    end
+  else inr vars).
 Defined.
 
 Fixpoint foreach_ZM_down' {rv e Vars} (from to step off : Z) (n : nat) `{ArithFact (0 <? step)} `{ArithFact (off <=? 0)} (vars : Vars) (body : forall (z : Z) `(ArithFact (to <=? z <=? from)), Vars -> monad rv Vars e) {struct n} : monad rv Vars e.
@@ -118,10 +136,25 @@ exact (
   else returnm vars).
 Defined.
 
+Fixpoint foreach_ZE_down' {e Vars} (from to step off : Z) (n : nat) `{ArithFact (0 <? step)} `{ArithFact (off <=? 0)} (vars : Vars) (body : forall (z : Z) `(ArithFact (to <=? z <=? from)), Vars -> e + Vars) {struct n} : e + Vars.
+exact (
+  if sumbool_of_bool (to <=? from + off) then
+    match n with
+    | O => inr vars
+    | S n => body (from + off) _ vars >>$= fun vars => foreach_ZE_down' _ _ from to step (off - step) n _ _ vars body
+    end
+  else inr vars).
+Defined.
+
 Definition foreach_ZM_up {rv e Vars} from to step vars body `{ArithFact (0 <? step)} :=
     foreach_ZM_up' (rv := rv) (e := e) (Vars := Vars) from to step 0 (S (Z.abs_nat (from - to))) vars body.
 Definition foreach_ZM_down {rv e Vars} from to step vars body `{ArithFact (0 <? step)} :=
     foreach_ZM_down' (rv := rv) (e := e) (Vars := Vars) from to step 0 (S (Z.abs_nat (from - to))) vars body.
+
+Definition foreach_ZE_up {e Vars} from to step vars body `{ArithFact (0 <? step)} :=
+    foreach_ZE_up' (e := e) (Vars := Vars) from to step 0 (S (Z.abs_nat (from - to))) vars body.
+Definition foreach_ZE_down {e Vars} from to step vars body `{ArithFact (0 <? step)} :=
+    foreach_ZE_down' (e := e) (Vars := Vars) from to step 0 (S (Z.abs_nat (from - to))) vars body.
 
 (*declare {isabelle} termination_argument foreachM = automatic*)
 
@@ -223,11 +256,11 @@ Definition bools_of_bits_nondet {rv E} (bits : list bitU) : monad rv (list bool)
       bool_of_bitU_nondet b >>= fun b => 
       returnm (bools ++ [b])).
 
-Definition of_bits_nondet {rv A E} `{Bitvector A} (bits : list bitU) : monad rv A E :=
+Definition of_bits_nondet {rv n E} (bits : list bitU) `{ArithFact (n >=? 0)} : monad rv (mword n) E :=
   bools_of_bits_nondet bits >>= fun bs =>
   returnm (of_bools bs).
 
-Definition of_bits_fail {rv A E} `{Bitvector A} (bits : list bitU) : monad rv A E :=
+Definition of_bits_fail {rv n E} (bits : list bitU) `{ArithFact (n >=? 0)} : monad rv (mword n) E :=
   maybe_fail "of_bits" (of_bits bits).
 
 (* For termination of recursive functions.  We don't name assertions, so use
@@ -313,34 +346,22 @@ Definition untilMT {RV Vars E} (vars : Vars) (measure : Vars -> Z) (cond : Vars 
     else slice vec (start_vec - size_r1) (start_vec - size_vec) in
   write_reg r1 r1_v >> write_reg r2 r2_v*)
 
-Definition choose_bools {RV E} (descr : string) (n : nat) : monad RV (list bool) E :=
-  genlistM (fun _ => choose_bool descr) n.
+Section Choose.
+Context {rv E : Type}.
 
-Definition choose {RV A E} (descr : string) (xs : list A) : monad RV A E :=
+Definition choose_from_list {A} (descr : string) (xs : list A) : monad rv A E :=
   (* Use sufficiently many nondeterministically chosen bits and convert into an
      index into the list *)
-  choose_bools descr (List.length xs) >>= fun bs =>
-  let idx := ((nat_of_bools bs) mod List.length xs)%nat in
-  match List.nth_error xs idx with
+  choose_range descr 0 (Z.of_nat (List.length xs) - 1) >>= fun idx =>
+  match List.nth_error xs (Z.to_nat (projT1 idx)) with
     | Some x => returnm x
     | None => Fail ("choose " ++ descr)
   end.
 
-Definition internal_pick {rv a e} (xs : list a) : monad rv a e :=
-  choose "internal_pick" xs.
+Definition internal_pick {a} (xs : list a) : monad rv a E :=
+  choose_from_list "internal_pick" xs.
 
-Fixpoint undefined_word_nat {rv e} n : monad rv (Word.word n) e :=
-  match n with
-  | O => returnm Word.WO
-  | S m =>
-    choose_bool "undefined_word_nat" >>= fun b =>
-    undefined_word_nat m >>= fun t =>
-    returnm (Word.WS b t)
-  end.
-
-Definition undefined_bitvector {rv e} n `{ArithFact (n >=? 0)} : monad rv (mword n) e :=
-  undefined_word_nat (Z.to_nat n) >>= fun w =>
-  returnm (word_to_mword w).
+End Choose.
 
 (* If we need to build an existential after a monadic operation, assume that
    we can do it entirely from the type. *)

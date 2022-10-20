@@ -222,57 +222,56 @@ union instruction_kind = {
 }
 
 val __read_mem
-  = { ocaml: "Platform.read_mem", c: "platform_read_mem", _: "read_mem" }
-  : forall 'n (constant 'addrsize : Int), 'n > 0 & 'addrsize in {32, 64}.
-  (read_kind, int('addrsize), bits('addrsize), int('n)) -> bits(8 * 'n) effect {rmem}
+  = monadic { ocaml: "Platform.read_mem", c: "platform_read_mem", _: "read_mem" }
+  : forall 'n 'addrsize, 'n > 0 & 'addrsize in {32, 64}.
+  (read_kind, int('addrsize), bits('addrsize), int('n)) -> bits(8 * 'n)
+
 val __read_memt
-  = { ocaml: "Platform.read_memt", c: "platform_read_memt", _: "read_memt" }
-  : forall 'n (constant 'addrsize : Int), 'n > 0 & 'addrsize in {32, 64}.
-  (read_kind, bits('addrsize), int('n)) -> (bits(8 * 'n), bit) effect {rmemt}
+  = monadic { ocaml: "Platform.read_memt", c: "platform_read_memt", _: "read_memt" }
+  : forall 'n 'addrsize, 'n > 0 & 'addrsize in {32, 64}.
+  (read_kind, bits('addrsize), int('n)) -> (bits(8 * 'n), bit)
+
 val __write_mem_ea
-  = { ocaml: "Platform.write_mem_ea", c: "platform_write_mem_ea", _: "write_mem_ea" }
-  : forall 'n (constant 'addrsize : Int), 'n > 0 & 'addrsize in {32, 64}.
-  (write_kind, int('addrsize), bits('addrsize), int('n)) -> unit effect {eamem}
+  = monadic { ocaml: "Platform.write_mem_ea", c: "platform_write_mem_ea", _: "write_mem_ea" }
+  : forall 'n 'addrsize, 'n > 0 & 'addrsize in {32, 64}.
+  (write_kind, int('addrsize), bits('addrsize), int('n)) -> unit
+
 val __write_mem
-  = { ocaml: "Platform.write_mem", c: "platform_write_mem", _: "write_mem" }
-  : forall 'n (constant 'addrsize : Int), 'n > 0 & 'addrsize in {32, 64}.
-  (write_kind, int('addrsize), bits('addrsize), int('n), bits(8 * 'n)) -> bool effect {wmv}
+  = monadic { ocaml: "Platform.write_mem", c: "platform_write_mem", _: "write_mem" }
+  : forall 'n 'addrsize, 'n > 0 & 'addrsize in {32, 64}.
+  (write_kind, int('addrsize), bits('addrsize), int('n), bits(8 * 'n)) -> bool
+
 val __write_memt
-  = { ocaml: "Platform.write_memt", c: "platform_write_memt", _: "write_memt" }
-  : forall 'n (constant 'addrsize : Int), 'n > 0 & 'addrsize in {32, 64}.
-  (write_kind, bits('addrsize), int('n), bits(8 * 'n), bit) -> bool effect {wmvt}
+  = monadic { ocaml: "Platform.write_memt", c: "platform_write_memt", _: "write_memt" }
+  : forall 'n 'addrsize, 'n > 0 & 'addrsize in {32, 64}.
+  (write_kind, bits('addrsize), int('n), bits(8 * 'n), bit) -> bool
+
 val __write_tag
-  = { ocaml: "Platform.write_tag", c: "platform_write_tag", _: "write_tag" }
-  : forall (constant 'addrsize : Int), 'addrsize in {32, 64}.
-  (write_kind, bits('addrsize), bit) -> bool effect {wmvt}
+  = monadic { ocaml: "Platform.write_tag", c: "platform_write_tag", _: "write_tag" }
+  : forall 'addrsize, 'addrsize in {32, 64}.
+  (write_kind, bits('addrsize), bit) -> bool
+
 val __excl_res
-  = { ocaml: "Platform.excl_res", c: "platform_excl_res", _: "excl_result" }
-  : unit -> bool effect {exmem}
+  = monadic { ocaml: "Platform.excl_res", c: "platform_excl_res", _: "excl_result" }
+  : unit -> bool
+
 val __barrier
-  = { ocaml: "Platform.barrier", c: "platform_barrier", _: "barrier" }
-  : barrier_kind -> unit effect {barr}
+  = monadic { ocaml: "Platform.barrier", c: "platform_barrier", _: "barrier" }
+  : barrier_kind -> unit
 
 val __branch_announce
-  = { ocaml: "Platform.branch_announce", c: "platform_branch_announce", _ : "branch_announce" }
-  : forall (constant 'addrsize : Int), 'addrsize in {32, 64}.
+  = monadic { ocaml: "Platform.branch_announce", c: "platform_branch_announce", _ : "branch_announce" }
+  : forall 'addrsize, 'addrsize in {32, 64}.
   (int('addrsize), bits('addrsize)) -> unit
 
 val __cache_maintenance
-  = { ocaml: "Platform.cache_maintenance", c: "platform_cache_maintenance", _ : "cache_maintenance" }
-  : forall (constant 'addrsize : Int), 'addrsize in {32, 64}.
+  = monadic { ocaml: "Platform.cache_maintenance", c: "platform_cache_maintenance", _ : "cache_maintenance" }
+  : forall 'addrsize, 'addrsize in {32, 64}.
   (cache_op_kind, int('addrsize), bits('addrsize)) -> unit
 
 val __instr_announce
-  = { ocaml: "Platform.instr_announce", c: "platform_instr_announce", _: "instr_announce" }
+  = monadic { ocaml: "Platform.instr_announce", c: "platform_instr_announce", _: "instr_announce" }
   : forall 'n, 'n > 0.
   bits('n) -> unit
-
-/*
-val __write : forall 'n, 'n > 0. (write_kind, bits(64), int('n), bits(8 * 'n)) -> bool effect {eamem,wmv}
-function __write (wk, addr, len, value) = {
-  __write_mem_ea(wk, addr, len);
-  __write_mem(wk, addr, len, value)
-}
-*/
 
 $endif

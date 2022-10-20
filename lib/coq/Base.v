@@ -72,3 +72,4 @@ Require Export Sail.Operators_mwords.
 Require Export Sail.Prompt_monad.
 Require Export Sail.Prompt.
 Require Export Sail.State.
+Require Export Sail.Undefined.
