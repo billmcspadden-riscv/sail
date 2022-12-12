@@ -147,9 +147,10 @@ Docker is used as a ....
 
 === Windows
 Support of a native command line interface is not planned.  If you
-want to run Sail under Windows,  plan on running it under Cygwin.
+want to run Sail under Windows,  plan on running it under Cygwin or
+Windows Subsystem under Linux.
 
-=== Windows: Cygwin (Bill Mc.,  low priority)
+=== Windows: Cygwin and/or WSL (Bill Mc.,  low priority)
 
 If there is a demand,  a port to Cygwin will be attempted.
 
@@ -480,7 +481,51 @@ image:images/sail_i_hello_world_14.png[]
 
 image:images/sail_i_hello_world_15.png[]
 
+== How to print file name and location in print statements: `__FILE__, __LOC__`
+[#print__FILE__LOC__]
+A relatively recent addition  to sail was the
 
+`printf__FILE__LOC__.sail`:
+
+[source, sail]
+----
+// Demonstrates the use of __FILE__,  __LOC__
+
+$include <prelude.sail>
+
+// ========================================================
+// Function signatures (same idea as C's function prototype)
+// ========================================================
+
+val "print" : string -> unit
+
+val main : unit -> unit
+
+// ========================================================
+// The entry point into the program starts at the function, main.
+// ========================================================
+function main() = 
+    {
+    print("hello, world!\n") ;
+    print("file: "); print(__FILE__); print("\n");
+    print("loc:  "); print(__LOC__);  print("\n");
+    }
+
+----
+
+The output from running the executable:
+
+```
+ubuntu-VirtualBox 259> make
+SAIL_DIR=../../.. ; export SAIL_DIR ; \
+../../../sail -c -o out print__FILE__LOC__.sail
+gcc out.c ../../../lib/*.c  -lgmp -lz -I ../../../lib/ -o out
+./out
+hello, world!
+file: print__FILE__LOC__.sail
+loc:  print__FILE__LOC__.sail:20.27-20.34
+ubuntu-VirtualBox 260>
+```
 
 == Data types
 === effect annotations
