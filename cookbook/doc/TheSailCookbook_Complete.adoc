@@ -139,7 +139,23 @@ TBD
 
 === MacOS (Martin)
 
-TBD
+Installation with `brew` and `opam` is straighforward. On my
+MacBook Pro, with an M1 Processor, runniung Ventura 13.0.1, I followed
+the instructions at https://github.com/rems-project/sail/blob/sail2/INSTALL.md[]
+
+
+I use brew (https://brew.sh/) to install software. With brew I install opam https://opam.ocaml.org/ and Ocaml itself (https://ocaml.org/). Then I follow these steps:
+
+----
+    ocaml -version
+    eval $(opam config env)
+    xcode-select --install
+    brew install gmp z3 pkg-config
+    opam install sail
+----
+
+Depending what is already installed on your computer, some of the above my not be necessary. When running `opam install sail` you will be asked `Do you want to continue?` and you need to answer `y`. You can run `sail -v` to see what version you have installed. 
+
 
 === Docker
 
