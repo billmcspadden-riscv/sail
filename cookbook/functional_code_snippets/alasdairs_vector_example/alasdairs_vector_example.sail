@@ -1,5 +1,7 @@
 default Order dec
 
+//======================================================================
+
 $include <prelude.sail>
 $include <generic_equality.sail>
 $include <exception.sail>
@@ -36,7 +38,8 @@ function split(n, m, bv) = {
     result
 }
 
-val merge : forall 'n 'm, 'n > 0 & 'm > 0. (int('n), int('m), vector('n, dec, bits('m))) -> bits('n * 'm)
+val merge : forall 'n 'm, 'n > 0 & 'm > 0. (int('n), int('m), 
+        vector('n, dec, bits('m))) -> bits('n * 'm)
 
 function merge(n, m, vec) = {
     var result: bits('n * 'm) = sail_zeros(n * m);
@@ -84,8 +87,11 @@ function decode_vector_op(bv) = match bv {
     0b11 => throw Reserved("vector op 0b11"),
 }
 
+//======================================================================
 val vector_op : forall 'n 'm, 'n > 0 & 'm > 0.
-    (VectorOp, int('n), int('m), vector('n, dec, bits('m)), vector('n, dec, bits('m))) -> vector('n, dec, bits('m))
+    (VectorOp, int('n), int('m), 
+    vector('n, dec, bits('m)), vector('n, dec, bits('m))) 
+    -> vector('n, dec, bits('m))
 
 function vector_op(op, n, m, v1, v2) = {
     var result: vector('n, dec, bits('m)) = undefined;
@@ -99,38 +105,55 @@ function vector_op(op, n, m, v1, v2) = {
     result
 }
 
-val decode_split : forall 'vlen, 'vlen in {64, 128, 256, 512}. (int('vlen), bits(4)) -> {'n 'm, 'vlen == 'n * 'm & 'm > 0. (int('n), int('m))}
+val decode_split : forall 'vlen, 'vlen in {64, 128, 256, 512}. 
+    (int('vlen), bits(4)) 
+    -> {'n 'm, 'vlen == 'n * 'm & 'm > 0. (int('n), int('m))}
 
 function decode_split(vlen, splitting) = {
     match splitting {
         0b0000 => (1, vlen),
-        0b0001 => let x = tdiv_int(vlen, 2) in { assert(x * 2 == vlen); (2, x) },
-        0b0010 => let x = tdiv_int(vlen, 4) in { assert(x * 4 == vlen); (4, x) },
-        0b0011 => let x = tdiv_int(vlen, 8) in { assert(x * 8 == vlen); (8, x) },
-        0b0100 => let x = tdiv_int(vlen, 16) in { assert(x * 16 == vlen); (16, x) },
-        0b0101 => let x = tdiv_int(vlen, 32) in { assert(x * 32 == vlen); (32, x) },
-        0b0110 => let x = tdiv_int(vlen, 64) in { assert(x * 64 == vlen); (64, x) },
-        0b0111 if vlen > 64 => let x = tdiv_int(vlen, 128) in { assert(x * 128 == vlen); (128, x) },
-        0b1000 if vlen > 128 => let x = tdiv_int(vlen, 256) in { assert(x * 256 == vlen); (256, x) },
-        0b1001 if vlen > 256 => let x = tdiv_int(vlen, 512) in { assert(x * 512 == vlen); (512, x) },
+        0b0001 => let x = tdiv_int(vlen, 2) in 
+            { assert(x * 2 == vlen); (2, x) },
+        0b0010 => let x = tdiv_int(vlen, 4) in 
+            { assert(x * 4 == vlen); (4, x) },
+        0b0011 => let x = tdiv_int(vlen, 8) in 
+            { assert(x * 8 == vlen); (8, x) },
+        0b0100 => let x = tdiv_int(vlen, 16) in 
+            { assert(x * 16 == vlen); (16, x) },
+        0b0101 => let x = tdiv_int(vlen, 32) in 
+            { assert(x * 32 == vlen); (32, x) },
+        0b0110 => let x = tdiv_int(vlen, 64) in 
+            { assert(x * 64 == vlen); (64, x) },
+        0b0111 if vlen > 64 => let x = tdiv_int(vlen, 128) in 
+            { assert(x * 128 == vlen); (128, x) },
+        0b1000 if vlen > 128 => let x = tdiv_int(vlen, 256) in 
+            { assert(x * 256 == vlen); (256, x) },
+        0b1001 if vlen > 256 => let x = tdiv_int(vlen, 512) in 
+            { assert(x * 512 == vlen); (512, x) },
         _ => throw Invalid_instruction("vector split encoding"),
     }
 }
 
-function clause decode splitting : bits(4) @ 0xFFFFF @ vop : bits(2) @ dest : vregindex @ src1 : vregindex @ src2 : vregindex = {
-    let vop = decode_vector_op(vop);
-    let vlen = vlen_length();
-    let (n, m) = decode_split(vlen, splitting);
-    let v1 = split(n, m, V(src1)[vlen - 1 .. 0]);
-    let v2 = split(n, m, V(src2)[vlen - 1 .. 0]);
-    let result = vector_op(vop, n, m, v1, v2);
-    V(dest) = sail_zero_extend(merge(n, m, result), sizeof(vlenmax))
+function clause decode splitting : 
+    bits(4) @ 0xFFFFF @ vop : 
+    bits(2) @ dest : 
+    vregindex @ src1 : 
+    vregindex @ src2 : 
+    vregindex = {
+        let vop = decode_vector_op(vop);
+        let vlen = vlen_length();
+        let (n, m) = decode_split(vlen, splitting);
+        let v1 = split(n, m, V(src1)[vlen - 1 .. 0]);
+        let v2 = split(n, m, V(src2)[vlen - 1 .. 0]);
+        let result = vector_op(vop, n, m, v1, v2);
+        V(dest) = sail_zero_extend(merge(n, m, result), sizeof(vlenmax))
 }
 
 function clause decode _ = throw Reserved("instruction")
 
 val main : unit -> unit
 
+//======================================================================
 function main() = {
     if split(2, 4, 0xAB) == [0xA, 0xB] then {
         print_endline("ok")
