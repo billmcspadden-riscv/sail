@@ -26,6 +26,8 @@ all the programming examples found in this document.
 
 <<hello_world>>
 
+<<print__FILE__LOC__>>
+
 <<my_replicate_bits>>
 
 <<list_iteration_example>>
@@ -483,7 +485,11 @@ image:images/sail_i_hello_world_15.png[]
 
 == How to print file name and location in print statements: `__FILE__, __LOC__`
 [#print__FILE__LOC__]
-A relatively recent addition  to sail was the
+A relatively recent addition  to sail was the addition of the keywords
+`__FILE__` amnd `__LOC__`.  These function in much the same way as in C.
+`__FILE__` expands to the filename. `__LOC__` (similar to `__LINE__` in C)
+expands to the line number and character position where the keyword was
+found.   These are useful for debug and error statments.
 
 `printf__FILE__LOC__.sail`:
 
