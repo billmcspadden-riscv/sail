@@ -550,6 +550,24 @@ ubuntu-VirtualBox 260>
 ```
 
 == Data types
+
+Sail is a straightforward language, with one notable exception. Sail is designed to be a minimal language that is only good at one thing: writing ISA interpreters. It offers a lot of support that make this easy. 
+
+- Infinite precision integer and floating point numbers
+- String support for bits
+- Strong support for bit vectors
+- Convenient support for named bitfields
+- Union types to support tracking state
+- Effect annotations
+
+The two most notable changes from normal languages are:
+
+- Only first-order functions. So, unlike e.g. C or Python, we cannot pass functions as arguments, and can also not return functions.
+- **Liquid types.** They may be the most unusual of Sail's features. THey are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
+
+
+
+
 === effect annotations
 === Integers
 - Int
