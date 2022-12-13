@@ -203,8 +203,34 @@ all things that an RTL contains.
 A mental model for Sail is that it lets you express what an **external** oberver, i.e. software can see of a processor. Sail is not about micro-architecture. 
 
 
-=== version management and what to expect
-TBD
+== Sail compilation
+
+=== Cambridge compiler
+
+Sail has currently one main compiler, https://github.com/rems-project/sail[see here]. It currently compiles to the following backends.
+
+1. Simulators (which run programs of the modelled ISA):
+  - C simulator (this is the main one)
+  - Ocaml simulator (exists mostly for historical purposes)
+
+2. Logical theories (which render the description of the ISA in logical form) using the following logical systems:
+    - Isabelle/HOL (see e.g. https://github.com/riscv/sail-riscv/tree/master/prover_snapshots/isabelle[here] for RISC-V models in HOL.)
+    - HOL4
+    - Coq
+    - SMT-LIB 
+
+Building the Sail system itself is a multi-stage meta-programming process, that the picture below captures in some detail.
+
+image:./images/sail.svg[] 
+
+=== Pydrofoil backend.
+
+Sail was developed with a  emphasis on correctness and verification. One consequence is that the compiler from Sail to C is quite conservative in its optimisations, since correctness of compiler optimisatins is highly nonp-trivial. Hence generated C-simulators can be relatively slow. 
+
+https://github.com/pydrofoil/pydrofoil[Pydrofoil] is a new tracing-JIT compiler for Sail, based on the https://www.pypy.org/[PyPy] meta-tracing framework. This is currently under active development. As of December 2022, support for infinite precision floating point arithmetic is  the main missing feature.
+
+
+
 
 [#hello_world]
 == “Hello, World” example program (Bill)
