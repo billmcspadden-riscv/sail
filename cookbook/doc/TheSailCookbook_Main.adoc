@@ -411,7 +411,7 @@ Sail is a straightforward language, with one notable exception. Sail is designed
 The two most notable changes from normal languages are:
 
 - Only first-order functions. So, unlike e.g. C or Python, we cannot pass functions as arguments, and can also not return functions.
-- **Liquid types.** They may be the most unusual of Sail's features. THey are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
+- **Liquid types.** They may be the most unusual of Sail's features. They are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
 
 
 === Infinite precision integer and floating point data types
@@ -432,8 +432,31 @@ Sail sidesteps this problem by providing infinite precision integer and floating
 - Multi-precision
 
 === Type variables and kinding
-What does " 'n " mean?
+Many languages have generics.  In C++ you might see a template class definition like 
 
+----
+template <class T>
+class C {
+  private:
+  T* p;
+  public:
+  T func(T t) { return t; }
+};
+---- 
+
+This class is parameterised by `T` which is a placeholder for a type. We can instatiate `T` by other types. We call parameters like `T` a *type variable*. In Java we also have generics, e.g.
+
+----
+class C<T>{
+    T t;
+    void set(T t){this.t=t;}
+    T func(){return t;}
+}
+----
+
+Here, too *T* is a type variable.
+
+Sail, too, has type variables. They are written `'n` with a tick. However, Sail does not have full generics in the sense of C++ and Java, where type variables can be instantiated by (almost) arbitrary other types. In Sail yype variables are used for liquid types, described below.
 
 === Effect annotations
 
