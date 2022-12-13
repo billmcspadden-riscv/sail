@@ -858,9 +858,24 @@ of many support functions.
 === the C interface
 
 [#simple_cpu_example]
-== Simple CPU example (Martin)
-- From nand2tetris
 
+== Simple CPU example (nand2tetris)
+
+A famous computer science textbook, https://www.nand2tetris.org/[The Elements of Computing Systems], defines a simple 16 bit CPU. The entire ISA dedfinition fits in 220 lines  of Sail and about 80 lines of supporting C. Here is the Sail code, written by John Witulski and 
+Carl Friedrich Bolz-Tereick. (See https://github.com/pydrofoil/pydrofoil/blob/main/pydrofoil/test/nand2tetris/[here] for the original code.)
+
+----
+include::./nand2tetris/nand2tetris.sail[]
+---- 
+
+The supporting C code is 
+----
+include::./nand2tetris/nandsupport.c[]
+----
+We also need the following header file.
+----
+include::./nand2tetris/nandsupport.h[]
+----
 
 == Formal tools that analyze Sail source code
 
