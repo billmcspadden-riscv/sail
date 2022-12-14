@@ -534,13 +534,26 @@ Here is an example:
 
     val f : forall 'n, 'n > 0. vector('n, dec, bits(5)) -> bool                                                                                                                                  function f ( regs ) = {                                                                                                                                                                         foreach ( x from 0 to (length(regs) - 1) ) {                                                                                                                                                    if ( regs[x][0] == bitone) then return true                                                                                                                                              };                                                                                                                                                                                             false                                                                                                                                                                                    }
 
-### Bits and bit vectors
+### Bits 
 
+Sail has a built-in `bit` type with members `bitzero` and `bitone`. Note: 
+
+- `bit` is **not** a numeric type, i.e. not `range(0, 1)`. 
+- 'bit`  is **not** the type `bool`
+
+### Bitvectors and bits
+
+
+For decrementing bits we define:
+
+`bitvector('n, dec)` is hardcoded as an abbreviation for `vector('n, dec, bit)` and likewise for  `bitvector('n, inc)`. Now we can define `bits(.)` as follows.
+
+```
+type bits ('n : Int) = bitvector('n, dec)
+```
 ### Strings
 
-- Strings
-
-- `bit` type with members `bitzero` and `bitone`. Note: `bit` is **not** a numeric type, i.e. not `range(0, 1)`
+TBD
 
 === Lists
 
@@ -611,9 +624,10 @@ The kinds that occur most often are
 
 - `Int`, as used in e.g. `type xlen : Int = 32`
 - `Type`, used like so, e.g.
-   ----
-      val not_implemented : forall ('a : Type). string -> 'a effect {escape}`                                                                                                                          ---- 
-- 'Bool'
+
+      val not_implemented : forall ('a : Type). string -> 'a effect  { escape }
+
+- `Bool`
 - In addition, we can form functions, e.g. `Int => Bool => Int'
 
 The kinding for each built-in type can be found in the compiler
