@@ -564,19 +564,18 @@ The bitfield wrapper type will be the something like `union cr = { Mk_cr(bits(xl
 TODO: this example is too RISCV specific (requires `xlenbits`), use something more generic.
 
 
-=== Liquid data types (Martin)
+=== Liquid data types 
 
-The name Liquid Types is a portmanteau of *L* og *i* cally *Qu* alified *D* ata Types.
+From a programming language design point-of-view, Sail's liquid types might be its the novel and interesting feature. 
+BTW, the name Liquid Types is a portmanteau of *L* og *i* cally *Qu* alified *D* ata Types. We expect liquid types to become more mainstream in the next decade.
 
-ISA specification is drenched with bit-vectors. Assigning, e.g. a
-32-bit vector to a 48-bit vector is almost always wrong. Likewise,
+ISA specification is drenched with bit-vectors. Assigning, e.g. a 32-bit vector to a 48-bit vector is almost always wrong. Likewise,
 asking for the 19th bit of a 16-bit vector is most likely a
 problem. In mainstream programming languages like C, C++ or Java, such
 errors are typically only caught at run-time.  Liquid types exist to
 catch such problems at *compile-time*.
 
-With liquid types it is possible to type a function that thats an integer `n`
-and a bitvector of length `n`, and returns a bitvector of length `n*n`. The
+With liquid types it is possible to type a function that thats an integer `n` and a bitvector of length `n`, and returns a bitvector of length `n*n`. The
 typing system also ensure that all calls to such a function pass and receive bitvectors of appropriate size.
 
 For the cognoscenti we remark that liquid types are a form of dependent types, since numbers like `m` and `n` are parts of types. But unlike general dependent types, which have undecidable type-inference, and type-checking, liquid types are suitably restricted so that, simplifying a bit, type-inference remains decidable (and is handled by an SMT solver, Z3 in the current implementation of Sail). 
@@ -617,7 +616,7 @@ If we change `forall 'n, ('n > 0). bits('n) -> bit` to e.g.
 val f5 : forall 'n, ('n > 18). bits('n) -> bit
 function f5(bs) = bs[17] 
 ----
-The compiler is happy again. Let's do something a little bit more interesting. Here we have a function
+the compiler is happy again. Let's do something a little bit more interesting. Here we have a function
 ----
 val f6 : forall 'm 'n, ('m > 18 & 'm == 'n). (bits('m), bits('n)) -> bits('n)
 function f6(b1, b2) =
@@ -626,6 +625,7 @@ function f6(b1, b2) =
 that takes two bitvectors of length at least 19 that must also 
 of the same lenth. It indexes one of them at index 7. Then it returns `b1 + b2` which is the pointwise logical sum of bits. (See  https://github.com/rems-project/sail/blob/sail2/lib/vector_dec.sail#L197-L205[vector_dec.sail] from Sail's standard library for a definition.)
 
+*TODO:* add more complex examples
 
 == A more complicated example
 
