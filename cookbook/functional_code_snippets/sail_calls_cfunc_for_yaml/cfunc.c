@@ -1,13 +1,4 @@
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    cfunc.c
-//
-// Description: Functions to be called by Sail to get values from a yaml file.
-//
-// Author(s):   Bill McSpadden (bill@riscv.org)
-//
-// Revision:    See git log
-// ============================================================================
 
 #include <sail.h>
 #include "cfunc.h"
@@ -43,7 +34,9 @@ cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
         }
     else
         {
-        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, yaml_filename);
+        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", 
+                    yaml_key_str, yaml_filename);
+
         // TODO: figure out a return mechanism and let caller decide on action.
         exit(1);
         }
@@ -57,9 +50,6 @@ cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
 
 char *
 cfunc_string(sail_string **s,  char *yaml_filename, char * yaml_key_str)
-//cfunc_string(sail_string s,  char *yaml_filename, char * yaml_key_str)
-//cfunc_string(sail_string *s,  char *yaml_filename, char * yaml_key_str)
-//cfunc_string(sail_string s,  char *yaml_filename, char * yaml_key_str)
     {
     struct fy_document      *fyd = NULL;
     char                    yaml_val_string[1024];
@@ -75,23 +65,25 @@ cfunc_string(sail_string **s,  char *yaml_filename, char * yaml_key_str)
     fyd = fy_document_build_from_file(NULL, yaml_filename);
     if ( !fyd )
         {
-        fprintf(stderr, "error: failed to build document from yaml file, %s\n", yaml_filename);
+        fprintf(stderr, "error: failed to build document from yaml file, %s\n", 
+                yaml_filename);
         exit(1);
         }
 
     count = fy_document_scanf(fyd, tmp_str, yaml_val_string);
     if (count == 1)
         {
-        printf("%s, %d: found the key-string and it has a value: '%s'\n", __FILE__, __LINE__, yaml_val_string);
+        printf("%s, %d: found the key-string and it has a value: '%s'\n", 
+                __FILE__, __LINE__, yaml_val_string);
         ret_str_ptr = malloc(strlen(yaml_val_string));
         strcpy(ret_str_ptr, yaml_val_string);
         printf("ret_str_ptr: '%s'\n", ret_str_ptr);
         *s = ret_str_ptr;
-//        s = ret_str_ptr;
         }
     else
         {
-        fprintf(stderr, "error: value for key, '%s',  not found in yaml file, '%s'\n", yaml_key_str, yaml_filename);
+        fprintf(stderr, "error: value for key, '%s',  not found in yaml file, '%s'\n", 
+                yaml_key_str, yaml_filename);
         // TODO: figure out a return mechanism and let caller decide on action.
         exit(1);
         }

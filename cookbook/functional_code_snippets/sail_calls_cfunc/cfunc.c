@@ -20,10 +20,16 @@ cfunc_int(sail_int *zret_int, unit u)
     {
 //    mpz_set_ui(zret_int, 142);
     mpz_set_ui(*zret_int, 142);
-//    mpz_set_ui(zret_int, 9223372036854775808 );                       // 2 ^ 64           // works
-//    mpz_set_ui(zret_int, (9223372036854775808 + 1) );                 // (2 ^ 64) + 1     // works
-//    mpz_set_ui(zret_int, (123456789012345678901234567890) );          // fails: sail.test prints out incorrect number But the next example works.
-//    mpz_init_set_str(*zret_int, "123 456 789 012 345 678 901 234 567 890", 10 );  // NOTE: white space allowed in string // works
+
+// 2 ^ 64           // works
+//    mpz_set_ui(zret_int, 9223372036854775808 );                       
+// (2 ^ 64) + 1     // works
+//    mpz_set_ui(zret_int, (9223372036854775808 + 1) );                 
+// fails: sail.test prints out incorrect number But the next example works.
+//    mpz_set_ui(zret_int, (123456789012345678901234567890) );          
+
+// NOTE: white space allowed in string // works
+//    mpz_init_set_str(*zret_int, "123 456 789 012 345 678 901 234 567 890", 10 );  
 
     return(42); // TODO: Nothing is done with this return value, right?
     }

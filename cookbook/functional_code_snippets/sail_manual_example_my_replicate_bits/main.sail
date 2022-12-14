@@ -1,20 +1,10 @@
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    main.sail
-//
-// Description: Example sail file
-//
-// Author(s):   Bill McSpadden (bill@riscv.sail)
-//
-// Revision:    See revision control log
-// ============================================================================
 
 default Order dec
 $include <prelude.sail>
 
 val "print" : string -> unit
 
-//val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
 $include "my_replicate_bits_function_signatures.sail"
 
 

@@ -1,16 +1,4 @@
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    cfunc.h
-//
-// Description: Functions prototype support for cfunc
-//
-// Author(s):   Bill McSpadden (bill@riscv.org)
-//
-// Revision:    See git log
-// ============================================================================
-//#ifndef __CFUNC_H__
-//#define __CFUNC_H__
-//
 
 #pragma once
 
@@ -26,7 +14,9 @@
 //
 //  TODO: make the return value of type void.
 
-//INT_RET_TYPE    cfunc_int(sail_int *, char *,  unit);     // TODO:  find out why unit is sometimes required, sometimes not INT_RET_TYPE    cfunc_int(sail_int *, char *);
+// TODO:  find out why unit is sometimes required, sometimes not INT_RET_TYPE    
+//  cfunc_int(sail_int *, char *);
+//INT_RET_TYPE    cfunc_int(sail_int *, char *,  unit);     
 
 INT_RET_TYPE    cfunc_int(sail_int *, char *, char *);
 char *          cfunc_string(sail_string **, char *, char *);
@@ -35,4 +25,3 @@ char *          cfunc_string(sail_string **, char *, char *);
 
 unit            cfunc_dump_yaml(char *);
 
-//#endif
