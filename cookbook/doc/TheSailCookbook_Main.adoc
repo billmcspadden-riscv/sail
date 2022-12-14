@@ -483,7 +483,7 @@ All these types can be used interchangeably provided the rules summarised in the
 - int
 - Multi-precision
 
-=== Type variables and kinding
+=== Type variables
 Many languages have generics.  In C++ you might see a template class definition like 
 
 ----
@@ -509,6 +509,28 @@ class C<T>{
 Here, too *T* is a type variable.
 
 Sail, too, has type variables. They are written `'n` with a tick. However, Sail does not have full generics in the sense of C++ and Java, where type variables can be instantiated by (almost) arbitrary other types. In Sail yype variables are used for liquid types, described below.
+
+=== Kinding
+
+Sail's types, especially liquid types,  are quite complex.
+We must avoid forming syntactically invald types. In order to do that, Sail
+uses a *kindind system* which can be seen as a typing system "higher up":
+
+- Types guarantee that programs are syntactially 'sane'
+- Kinds guarantee that types are syntactially 'sane'
+
+The kinds that occur most often are
+
+- `Int`, as used in e.g. `type xlen : Int = 32`
+- `Type`, used like so, e.g.
+   ----
+      val not_implemented : forall ('a : Type). string -> 'a effect {escape}`                                                                                                                          ---- 
+- 'Bool'
+- In addition, we can form functions, e.g. `Int => Bool => Int'
+
+The kinding for each built-in type can be found in the compiler
+https://github.com/rems-project/sail/blob/sail2/src/lib/type_check.ml#L701-L721[src/lib/type_check.ml]
+
 
 === Effect annotations
 
@@ -905,6 +927,39 @@ include::../functional_code_snippets/sail_calls_cfunc_for_yaml/Makefile[]
 
 
 == Other stuff
+
+[#pragmas]
+=== Pragmas
+
+Sail has a few pragmas, see the compiler in
+https://github.com/rems-project/sail/blob/sail2/src/lib/preprocess.ml#L119-L139[`src/lib/preprocess.ml`]:
+
+-      'define'
+-      'include'
+-      'ifdef'
+-      'ifndef'
+-      'iftarget'
+-      'else'
+-      'endif'
+-      'option'
+-      'optimize'
+-      'latex'
+-      'property' 
+-      'counterexample'
+-      'suppress_warnings'
+-      'include_start'
+-      'include_end'
+-      'sail_internal'
+-      'target_set'
+-      'non_exec'
+
+Note that  `property` and  `counterexample` are for SMT solvers.
+The only difference beteween `$property` and `$counterexample` seems to be that the latter adds
+- `(set-option :produce-models true)` as first line
+- `(get-model)` as last line
+of the produced output SMT-LIB file. Rest seems to be identical.
+
+
 
 [#scattered-definitions]
 === Scattered definitions:  Why?  What are they?
