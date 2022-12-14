@@ -558,7 +558,13 @@ that `list` is a generic type constructor, so you can do e.g.:
 Note that Sail currently does not have a concatenation operator. We
 can write a monomorphic one, e.g.
 
-    val concat_list : forall 'n, ('n > 0 ). ( list( bits('n) ), list( bits('n) ) ) -> list( bits('n) )                                                                                           function concat_list ( l1, l2 ) = {                                                                                                                                                             match l1 {                                                                                                                                                                                      x :: xs => (x :: ( concat_list( xs, l2 ) ) ),                                                                                                                                                [||] => l2                                                                                                                                                                                }                                                                                                                                                                                         }
+    val concat_list : forall 'n, ('n > 0 ). ( list( bits('n) ), list( bits('n) ) ) -> list( bits('n) )
+    function concat_list ( l1, l2 ) = {
+       match l1 {
+          x :: xs => (x :: ( concat_list( xs, l2 ) ) ),
+          [||] => l2
+       }
+    }
 
 but this is not currently accepted by the `-c` option. It is accepted
 by the `-just_types` option.
@@ -576,7 +582,9 @@ class C {
 };
 ---- 
 
-This class is parameterised by `T` which is a placeholder for a type. We can instatiate `T` by other types. We call parameters like `T` a *type variable*. In Java we also have generics, e.g.
+This class is parameterised by `T` which is a placeholder for a
+type. We can instatiate `T` by other types. We call parameters like
+`T` a *type variable*. In Java we also have generics, e.g.
 
 ----
 class C<T>{
