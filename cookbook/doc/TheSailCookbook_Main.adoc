@@ -23,6 +23,8 @@ all the programming examples found in this document.
 
 <<hello_world>>
 
+<<print__FILE__LOC__>>
+
 <<my_replicate_bits>>
 
 <<list_iteration_example>>
@@ -136,7 +138,23 @@ TBD
 
 === MacOS (Martin)
 
-TBD
+
+Installation with `brew` and `opam` is straighforward. On my
+MacBook Pro, with an M1 Processor, runniung Ventura 13.0.1, I followed
+the instructions at https://github.com/rems-project/sail/blob/sail2/INSTALL.md[]
+
+
+I use brew (https://brew.sh/) to install software. With brew I install opam https://opam.ocaml.org/ and Ocaml itself (https://ocaml.org/). Then I follow these steps:
+
+----
+    ocaml -version
+    eval $(opam config env)
+    xcode-select --install
+    brew install gmp z3 pkg-config
+    opam install sail
+----
+
+Depending what is already installed on your computer, some of the above my not be necessary. When running `opam install sail` you will be asked `Do you want to continue?` and you need to answer `y`. You can run `sail -v` to see what version you have installed. 
 
 === Docker
 
@@ -144,9 +162,10 @@ Docker is used as a ....
 
 === Windows 
 Support of a native command line interface is not planned.  If you
-want to run Sail under Windows,  plan on running it under Cygwin.
+want to run Sail under Windows,  plan on running it under Cygwin or
+Windows Subsystem under Linux.
 
-=== Windows: Cygwin (Bill Mc.,  low priority)
+=== Windows: Cygwin and/or WSL (Bill Mc.,  low priority)
 
 If there is a demand,  a port to Cygwin will be attempted.
 
@@ -157,23 +176,61 @@ Other Linux distis?  Or will Docker support?
 
 == Basic description
 === What Sail is
-Sail is a programming language that is targetted for
- specifying an ISA.  Once specified, a set of
-instructions (usually found in a .elf file) can then
-be executed on the "model" and the results observed.
+Sail is a domain-specific programming language that is
+intended for specifying an ISA in as convenient and rigorous a manner as possible. Sail's main focus is verification. Once specified, a Sail program can be compiled to multiple backends:
+
+- A C-model. This is an ISA simulator. It takes as input 
+ a set of instructions (usually found in a .elf file), and runs them. The results observed.
+
+- Various prover backends, including
+  - Isabelle/HOL
+  - HOL
+  - Coq
+  - SMT-LIB
+  Since a processor is essentially a state transformer, the specification is translated to a logical formula that expresses  the state transition relation logically.
 
 The model is a sequential model only;  at this time, 
 there are no semantics allowing for any type of parallel
 execution.  
 
-=== What sail is not 
+=== What Sail is not
+
 Sail is not an RTL (Register Transfer Language).
 There is no direct support for timing (as in clock
 timing) and there is no support for parallel execution,
 all things that an RTL contains.
 
-=== version management and what to expect
-TBD
+A mental model for Sail is that it lets you express what an **external** oberver, i.e. software can see of a processor. Sail is not about micro-architecture. 
+
+
+== Sail compilation
+
+=== Cambridge compiler
+
+Sail has currently one main compiler, https://github.com/rems-project/sail[see here]. It currently compiles to the following backends.
+
+1. Simulators (which run programs of the modelled ISA):
+  - C simulator (this is the main one)
+  - Ocaml simulator (exists mostly for historical purposes)
+
+2. Logical theories (which render the description of the ISA in logical form) using the following logical systems:
+    - Isabelle/HOL (see e.g. https://github.com/riscv/sail-riscv/tree/master/prover_snapshots/isabelle[here] for RISC-V models in HOL.)
+    - HOL4
+    - Coq
+    - SMT-LIB 
+
+Building the Sail system itself is a multi-stage meta-programming process, that the picture below captures in some detail.
+
+image:./images/sail.svg[] 
+
+=== Pydrofoil backend.
+
+Sail was developed with a  emphasis on correctness and verification. One consequence is that the compiler from Sail to C is quite conservative in its optimisations, since correctness of compiler optimisatins is highly nonp-trivial. Hence generated C-simulators can be relatively slow. 
+
+https://github.com/pydrofoil/pydrofoil[Pydrofoil] is a new tracing-JIT compiler for Sail, based on the https://www.pypy.org/[PyPy] meta-tracing framework. This is currently under active development. As of December 2022, support for infinite precision floating point arithmetic is  the main missing feature.
+
+
+
 
 [#hello_world]
 == “Hello, World” example program (Bill)
@@ -337,18 +394,126 @@ image:images/sail_i_hello_world_14.png[]
 
 image:images/sail_i_hello_world_15.png[]
 
+=== How to print file name and location in print statements: `__FILE__, __LOC__`
+[#print__FILE__LOC__] 
+A relatively recent addition  to sail was the addition of the keywords
+`__FILE__` amnd `__LOC__`.  These function in much the same way as in C.
+`__FILE__` expands to the filename. `__LOC__` (similar to `__LINE__` in C) 
+expands to the line number and character position where the keyword was
+found.   These are useful for debug and error statments.
+
+`printf__FILE__LOC__.sail`:
+
+[source, sail]
+----
+include::../functional_code_snippets/print__FILE__LOC__/print__FILE__LOC__.sail[]
+----
+
+The output from running the executable:
+
+```
+ubuntu-VirtualBox 259> make
+SAIL_DIR=../../.. ; export SAIL_DIR ; \
+../../../sail -c -o out print__FILE__LOC__.sail
+gcc out.c ../../../lib/*.c  -lgmp -lz -I ../../../lib/ -o out
+./out
+hello, world!
+file: print__FILE__LOC__.sail
+loc:  print__FILE__LOC__.sail:20.27-20.34
+ubuntu-VirtualBox 260> 
+```
+
+== Data types (and kinds)
+
+Sail is a straightforward language, with one notable exception. Sail is designed to be a minimal language that is only good at one thing: writing ISA interpreters. It offers a lot of support that make this easy. 
+
+- Infinite precision integer and floating point numbers
+- String support for bits
+- Strong support for bit vectors
+- Convenient support for named bitfields
+- Union types to support tracking state
+- Effect annotations
+
+The two most notable changes from normal languages are:
+
+- Only first-order functions. So, unlike e.g. C or Python, we cannot pass functions as arguments, and can also not return functions.
+- **Liquid types.** They may be the most unusual of Sail's features. They are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
 
 
-== Data types
-=== effect annotations
+=== Infinite precision integer, naturals and floating point data types
+
+All processors have finite precision arithmetic. The exact behaviour of
+finite precision arithmetic is difficult to define correctly, since there are so many edge cases, to do with overflow, underflow and rounding. 
+
+In the past, finite precision arithmetic was defined in an a  host language like C or C++ which  itself has 
+finite precision arithmetic, typically not quite the same as that of the guest ISA to be defined. That is even more complex, because the specification  needed to deal with the cartesian product of the edge cases of both, the host language and the guest ISA.
+
+Sail sidesteps this problem by providing infinite precision integer and floating point data types, which makes simplifies the problem a great deal, since the host language (Sail) has (almost) no edge cases.
+
+Sail has 3 built-in infinite precision arithmetic types:
+
+- Arbitrary precision integers: `int`
+- Arbitrary precision naturals: `nat`
+- Arbitrary precision reals: `real` (but no floating-point arithmetic). 
+
+All are useable for specifying finite precision arithmetic.
+
+
+### Range types:
+
+- Integer ranges `range(′n,′ m)` where  he type `range(’n,’m)` is
+an inclusive range between the `Int`-kinded type-variables `’n` and `’m`
+- The type `int(’o)` is an integer
+exactly equal to the `Int`-kinded type-variable `’n`, i.e. `int(’o)` = `range(’o,’o)`.
+
+All these types can be used interchangeably provided the rules summarised in the below diagram are satisfied (via constraint solving). ![](images/conversion.png)
+
+### Vectors
+
+### Bits and bit vectors
+
+### Strings
+
+- Strings
+
+- `bit` type with members `bitzero` and `bitone`. Note: `bit` is **not** a numeric type, i.e. not `range(0, 1)`
+
 === Integers
 - Int
 - int
 - Multi-precision
 
-=== type variables
-What does " 'n " mean?
+=== Type variables and kinding
+Many languages have generics.  In C++ you might see a template class definition like 
 
+----
+template <class T>
+class C {
+  private:
+  T* p;
+  public:
+  T func(T t) { return t; }
+};
+---- 
+
+This class is parameterised by `T` which is a placeholder for a type. We can instatiate `T` by other types. We call parameters like `T` a *type variable*. In Java we also have generics, e.g.
+
+----
+class C<T>{
+    T t;
+    void set(T t){this.t=t;}
+    T func(){return t;}
+}
+----
+
+Here, too *T* is a type variable.
+
+Sail, too, has type variables. They are written `'n` with a tick. However, Sail does not have full generics in the sense of C++ and Java, where type variables can be instantiated by (almost) arbitrary other types. In Sail yype variables are used for liquid types, described below.
+
+=== Effect annotations
+
+Effect annotations are automatically inferred as of Sail v0.15.
+       
 === Bits
 
 === Strings
@@ -401,9 +566,36 @@ TODO: this example is too RISCV specific (requires `xlenbits`), use something mo
 
 === Liquid data types (Martin)
 
-"Liquid": Portmanteau of "Logically Qualified"
+The name Liquid Types is a portmanteau of *L* og *i* cally *Qu* alified *D* ata Types.
 
-http://goto.ucsd.edu/\~ucsdpl-blog/liquidtypes/2015/09/19/liquid-types/#:~:text=Liquid%20Types%20are%20a%20constraint,integer%20linear%2C%20set%20theory%20etc. [A Gentle Introduction to Liquid Types By Niki Vazou]
+ISA specification is drenched with bit-vectors. Assigning, e.g. a
+32-bit vector to a 48-bit vector is almost always wrong. Likewise,
+asking for the 19th bit of a 16-bit vector is most likely a
+problem. In mainstream programming languages like C, C++ or Java, such
+errors are typically only caught at run-time.  Liquid types exist to
+catch such problems at *compile-time*.
+
+With liquid types it is possible to type a function that thats an integer `n`
+and a bitvector of length `n`, and returns a bitvector of length `n*n`. The
+typing system also ensure that all calls to such a function pass and receive bitvectors of appropriate size.
+
+For the cognoscenti we remark that liquid types are a form of dependent types, since numbers like `m` and `n` are parts of types. But unlike general dependent types, which have undecidable type-inference, and type-checking, liquid types are suitably restricted so that, simplifying a bit, type-inference remains decidable (and is handled by an SMT solver, Z3 in the current implementation of Sail). 
+
+
+=== A more complicated example
+
+Tthe following example is one that shows  some nuances about the Sail type
+system.  This example comes from Alasdair Armstrong who was asked to help with
+an example of how to handle VLEN (Vector Length)  for the RISC-V Vector extension.
+We wanted VLEN to be dynamically configurable and not a compile time setting.
+
+`alasdairs_vector_example.sail:``
+[source, sail]
+----
+include::../functional_code_snippets/alasdairs_vector_example/alasdairs_vector_example.sail[]
+----
+
+
 
 == Execution
 === Functions
@@ -715,17 +907,11 @@ specifies the compilation order as seen here:
 include::../functional_code_snippets/scattered_definitions/Makefile[]
 ----
 
-
-
-
-===  __FILE__ , __LINE__ , __LOC__
-
 === Variable argument list support 
 
-What support does Sail have for a variable argument
-list for its functions?
-
-TBD
+There is no native Sail support for variable argument lists.  This is primarily
+noticeable in the `print()` functions.  This limitation is worked around by
+simply doing a set of appropriate print funtions.
 
 == Description prelude.sail
 
@@ -736,9 +922,24 @@ of many support functions.
 === the C interface
 
 [#simple_cpu_example]
-== Simple CPU example (Martin)
-- From nand2tetris
 
+== Simple CPU example (nand2tetris)
+
+A famous computer science textbook, https://www.nand2tetris.org/[The Elements of Computing Systems], defines a simple 16 bit CPU. The entire ISA dedfinition fits in 220 lines  of Sail and about 80 lines of supporting C. Here is the Sail code, written by John Witulski and 
+Carl Friedrich Bolz-Tereick. (See https://github.com/pydrofoil/pydrofoil/blob/main/pydrofoil/test/nand2tetris/[here] for the original code.)
+
+----
+include::./nand2tetris/nand2tetris.sail[]
+---- 
+
+The supporting C code is 
+----
+include::./nand2tetris/nandsupport.c[]
+----
+We also need the following header file.
+----
+include::./nand2tetris/nandsupport.h[]
+----
 
 == Formal tools that analyze Sail source code
 

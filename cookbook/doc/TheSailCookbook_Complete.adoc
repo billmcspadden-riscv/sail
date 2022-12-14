@@ -26,6 +26,8 @@ all the programming examples found in this document.
 
 <<hello_world>>
 
+<<print__FILE__LOC__>>
+
 <<my_replicate_bits>>
 
 <<list_iteration_example>>
@@ -139,7 +141,23 @@ TBD
 
 === MacOS (Martin)
 
-TBD
+Installation with `brew` and `opam` is straighforward. On my
+MacBook Pro, with an M1 Processor, runniung Ventura 13.0.1, I followed
+the instructions at https://github.com/rems-project/sail/blob/sail2/INSTALL.md[]
+
+
+I use brew (https://brew.sh/) to install software. With brew I install opam https://opam.ocaml.org/ and Ocaml itself (https://ocaml.org/). Then I follow these steps:
+
+----
+    ocaml -version
+    eval $(opam config env)
+    xcode-select --install
+    brew install gmp z3 pkg-config
+    opam install sail
+----
+
+Depending what is already installed on your computer, some of the above my not be necessary. When running `opam install sail` you will be asked `Do you want to continue?` and you need to answer `y`. You can run `sail -v` to see what version you have installed. 
+
 
 === Docker
 
@@ -147,9 +165,10 @@ Docker is used as a ....
 
 === Windows
 Support of a native command line interface is not planned.  If you
-want to run Sail under Windows,  plan on running it under Cygwin.
+want to run Sail under Windows,  plan on running it under Cygwin or
+Windows Subsystem under Linux.
 
-=== Windows: Cygwin (Bill Mc.,  low priority)
+=== Windows: Cygwin and/or WSL (Bill Mc.,  low priority)
 
 If there is a demand,  a port to Cygwin will be attempted.
 
@@ -160,20 +179,30 @@ Other Linux distis?  Or will Docker support?
 
 == Basic description
 === What Sail is
-Sail is a programming language that is targetted for
- specifying an ISA.  Once specified, a set of
-instructions (usually found in a .elf file) can then
-be executed on the "model" and the results observed.
+Sail is a domain-specific programming language that is
+intended for specifying an ISA in as convenient and rigorous a manner as possible. Sail's main focus is verification. Once specified, a Sail program can be compiled to multiple backends:
+
+- A C-model. This is an ISA simulator. It takes as input 
+ a set of instructions (usually found in a .elf file), and runs them. The results observed.
+
+- Various prover backends, including
+  - Isabelle/HOL
+  - HOL
+  - Coq
+  - SMT-LIB
+  Since a processor is essentially a state transformer, the specification is translated to a logical formula that expresses  the state transition relation logically.
 
 The model is a sequential model only;  at this time,
 there are no semantics allowing for any type of parallel
 execution.
 
-=== What sail is not
+=== What Sail is not
 Sail is not an RTL (Register Transfer Language).
 There is no direct support for timing (as in clock
 timing) and there is no support for parallel execution,
 all things that an RTL contains.
+
+A mental model for Sail is that it lets you express what an **external** oberver, i.e. software can see of a processor. Sail is not about micro-architecture. 
 
 === version management and what to expect
 TBD
@@ -218,7 +247,7 @@ hello_world.sail:
 
 // Whitespace is NOT significant. Yay!
 
-default Order dec   // Required. Defines whether bit vectors are increasing
+default Order dec   // Required. Defines whether bit vectors are increasing 
                     // (inc) (MSB is index 0 or decreasing (dec) (LSB is index 0)
 
 // The $include directive is used to pull in other Sail code.
@@ -242,7 +271,7 @@ val main : unit -> unit
 // ========================================================
 // The entry point into the program starts at the function, main.
 // ========================================================
-function main() =
+function main() = 
     {
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
@@ -284,7 +313,7 @@ Makefile:
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log
+# Revision:		See revision control log 
 #
 # ================================================================
 
@@ -311,13 +340,13 @@ Makefile.generic:
 # Description:	Makefile for building Sail example code fragments
 #
 #				NOTE: in order to render this file in an asciidoc
-#				for the Sail cookbook, keep the line length less
+#				for the Sail cookbook, keep the line length less 
 #				then 86 characters, the width of the block comment line
 #				of this section
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log
+# Revision:		See revision control log 
 #
 # ==========================================================================
 
@@ -347,10 +376,10 @@ CCFLAGS			:= -lgmp -lz -I ${SAIL_DIR}/lib/
 #   sail compilation process.  It will be compiled with
 #   other C code to generate an executable
 # ${SAIL_DIR}/lib/*.c is a set of C code used for interaction
-#   with the programming environment.  It also provides
+#   with the programming environment.  It also provides 
 #   functionality that cannot be natively supported by sail.
-#
-C_SRC			:= out.c ${SAIL_DIR}/lib/*.c
+#   
+C_SRC			:= out.c ${SAIL_DIR}/lib/*.c 
 
 TARGET			:= out
 
@@ -480,16 +509,90 @@ image:images/sail_i_hello_world_14.png[]
 
 image:images/sail_i_hello_world_15.png[]
 
+=== How to print file name and location in print statements: `__FILE__, __LOC__`
+[#print__FILE__LOC__]
+A relatively recent addition  to sail was the addition of the keywords
+`__FILE__` amnd `__LOC__`.  These function in much the same way as in C.
+`__FILE__` expands to the filename. `__LOC__` (similar to `__LINE__` in C)
+expands to the line number and character position where the keyword was
+found.   These are useful for debug and error statments.
+
+`printf__FILE__LOC__.sail`:
+
+[source, sail]
+----
+// Demonstrates the use of __FILE__,  __LOC__
+
+$include <prelude.sail>
+
+// ========================================================
+// Function signatures (same idea as C's function prototype)
+// ========================================================
+
+val "print" : string -> unit
+
+val main : unit -> unit
+
+// ========================================================
+// The entry point into the program starts at the function, main.
+// ========================================================
+function main() = 
+    {
+    print("hello, world!\n") ;
+    print("file: "); print(__FILE__); print("\n");
+    print("loc:  "); print(__LOC__);  print("\n");
+    }
+
+----
+
+The output from running the executable:
+
+```
+ubuntu-VirtualBox 259> make
+SAIL_DIR=../../.. ; export SAIL_DIR ; \
+../../../sail -c -o out print__FILE__LOC__.sail
+gcc out.c ../../../lib/*.c  -lgmp -lz -I ../../../lib/ -o out
+./out
+hello, world!
+file: print__FILE__LOC__.sail
+loc:  print__FILE__LOC__.sail:20.27-20.34
+ubuntu-VirtualBox 260>
+```
+
+== Data types (and kinds)
+
+Sail is a straightforward language, with one notable exception. Sail is designed to be a minimal language that is only good at one thing: writing ISA interpreters. It offers a lot of support that make this easy. 
+
+- Infinite precision integer and floating point numbers
+- String support for bits
+- Strong support for bit vectors
+- Convenient support for named bitfields
+- Union types to support tracking state
+- Effect annotations
+
+The two most notable changes from normal languages are:
+
+- Only first-order functions. So, unlike e.g. C or Python, we cannot pass functions as arguments, and can also not return functions.
+- **Liquid types.** They may be the most unusual of Sail's features. THey are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
 
 
-== Data types
-=== effect annotations
+=== Infinite precision integer and floating point data types
+
+All processors have finite precision arithmetic. The exact behaviour of
+finite precision arithmetic is difficult to define correctly, since there are so many edge cases, to do with overflow, underflow and rounding. 
+
+In the past, finite precision arithmetic was defined in an a  host language like C or C++ which  itself has 
+finite precision arithmetic, typically not quite the same as that of the guest ISA to be defined. That is even more complex, because the specification  needed to deal with the cartesian product of the edge cases of both, the host language and the guest ISA.
+
+Sail sidesteps this problem by providing infinite precision integer and floating point data types, which makes simplifies the problem a great deal, since the host language (Sail) has (almost) no edge cases.
+
+
 === Integers
 - Int
 - int
 - Multi-precision
 
-=== type variables
+=== type variables and the kinding system
 What does " 'n " mean?
 
 === Bits
@@ -507,6 +610,10 @@ What does " 'n " mean?
 Sail is a modern programming language, in the ML tradition and has
 many forms of type constructors, in particular structs, unions, enums
 and bitfields. TBC
+
+=== Effect annotations
+
+Effect annotations are automatically inferred as of Sail v0.15.
 
 === Type declarations (1): Structs
 
@@ -552,6 +659,206 @@ TODO: this example is too RISCV specific (requires `xlenbits`), use something mo
 "Liquid": Portmanteau of "Logically Qualified"
 
 http://goto.ucsd.edu/\~ucsdpl-blog/liquidtypes/2015/09/19/liquid-types/#:~:text=Liquid%20Types%20are%20a%20constraint,integer%20linear%2C%20set%20theory%20etc. [A Gentle Introduction to Liquid Types By Niki Vazou]
+
+=== A more complicated example
+
+Tthe following example is one that shows  some nuances about the Sail type
+system.  This example comes from Alasdair Armstrong who was asked to help with
+an example of how to handle VLEN (Vector Length)  for the RISC-V Vector extension.
+We wanted VLEN to be dynamically configurable and not a compile time setting.
+
+`alasdairs_vector_example.sail:``
+[source, sail]
+----
+default Order dec
+
+//======================================================================
+
+$include <prelude.sail>
+$include <generic_equality.sail>
+$include <exception.sail>
+
+val decode : bits(32) -> unit
+
+overload operator - = {sub_bits}
+overload operator ^ = {xor_vec}
+
+union clause exception = Reserved : string
+union clause exception = Invalid_instruction : string
+
+register VLEN : bits(2)
+
+val vlen_length : unit -> {|64, 128, 256, 512|}
+
+function vlen_length() = match VLEN {
+    0b00 => 64,
+    0b01 => 128,
+    0b10 => 256,
+    0b11 => 512,
+}
+
+type vlenmax: Int = 512
+
+val split : forall 'len 'n 'm, 'len == 'n * 'm & 'n > 0 & 'm > 0.
+    (int('n), int('m), bits('len)) -> vector('n, dec, bits('m))
+
+function split(n, m, bv) = {
+    var result: vector('n, dec, bits('m)) = undefined;
+    foreach (i from 1 to n) {
+        result[i - 1] = bv[i * m - 1 .. i * m - m]
+    };
+    result
+}
+
+val merge : forall 'n 'm, 'n > 0 & 'm > 0. (int('n), int('m), 
+        vector('n, dec, bits('m))) -> bits('n * 'm)
+
+function merge(n, m, vec) = {
+    var result: bits('n * 'm) = sail_zeros(n * m);
+    foreach (i from 1 to n) {
+        result[i * m - 1 .. i * m - m] = vec[i - 1]
+    };
+    result
+}
+
+register V0 : bits(vlenmax)
+register V1 : bits(vlenmax)
+register V2 : bits(vlenmax)
+register V3 : bits(vlenmax)
+
+type vregindex = bits(2)
+
+val set_V : (vregindex, bits(vlenmax)) -> unit
+
+function set_V(i, bv) = match i {
+    0b00 => V0 = bv,
+    0b01 => V1 = bv,
+    0b10 => V2 = bv,
+    0b11 => V3 = bv,
+}
+
+val get_V : vregindex -> bits(vlenmax)
+
+function get_V(i) = match i {
+    0b00 => V0,
+    0b01 => V1,
+    0b10 => V2,
+    0b11 => V3,
+}
+
+overload V = {set_V, get_V}
+
+enum VectorOp = Vadd | Vsub | Vxor
+
+val decode_vector_op : bits(2) -> VectorOp
+
+function decode_vector_op(bv) = match bv {
+    0b00 => Vadd,
+    0b01 => Vsub,
+    0b10 => Vxor,
+    0b11 => throw Reserved("vector op 0b11"),
+}
+
+//======================================================================
+val vector_op : forall 'n 'm, 'n > 0 & 'm > 0.
+    (VectorOp, int('n), int('m), 
+    vector('n, dec, bits('m)), vector('n, dec, bits('m))) 
+    -> vector('n, dec, bits('m))
+
+function vector_op(op, n, m, v1, v2) = {
+    var result: vector('n, dec, bits('m)) = undefined;
+    foreach (i from 0 to (n - 1)) {
+        result[i] = match op {
+            Vadd => v1[i] + v2[i],
+            Vsub => v1[i] - v2[i],
+            Vxor => v1[i] ^ v2[i],
+        }
+    };
+    result
+}
+
+val decode_split : forall 'vlen, 'vlen in {64, 128, 256, 512}. 
+    (int('vlen), bits(4)) 
+    -> {'n 'm, 'vlen == 'n * 'm & 'm > 0. (int('n), int('m))}
+
+function decode_split(vlen, splitting) = {
+    match splitting {
+        0b0000 => (1, vlen),
+        0b0001 => let x = tdiv_int(vlen, 2) in 
+            { assert(x * 2 == vlen); (2, x) },
+        0b0010 => let x = tdiv_int(vlen, 4) in 
+            { assert(x * 4 == vlen); (4, x) },
+        0b0011 => let x = tdiv_int(vlen, 8) in 
+            { assert(x * 8 == vlen); (8, x) },
+        0b0100 => let x = tdiv_int(vlen, 16) in 
+            { assert(x * 16 == vlen); (16, x) },
+        0b0101 => let x = tdiv_int(vlen, 32) in 
+            { assert(x * 32 == vlen); (32, x) },
+        0b0110 => let x = tdiv_int(vlen, 64) in 
+            { assert(x * 64 == vlen); (64, x) },
+        0b0111 if vlen > 64 => let x = tdiv_int(vlen, 128) in 
+            { assert(x * 128 == vlen); (128, x) },
+        0b1000 if vlen > 128 => let x = tdiv_int(vlen, 256) in 
+            { assert(x * 256 == vlen); (256, x) },
+        0b1001 if vlen > 256 => let x = tdiv_int(vlen, 512) in 
+            { assert(x * 512 == vlen); (512, x) },
+        _ => throw Invalid_instruction("vector split encoding"),
+    }
+}
+
+function clause decode splitting : 
+    bits(4) @ 0xFFFFF @ vop : 
+    bits(2) @ dest : 
+    vregindex @ src1 : 
+    vregindex @ src2 : 
+    vregindex = {
+        let vop = decode_vector_op(vop);
+        let vlen = vlen_length();
+        let (n, m) = decode_split(vlen, splitting);
+        let v1 = split(n, m, V(src1)[vlen - 1 .. 0]);
+        let v2 = split(n, m, V(src2)[vlen - 1 .. 0]);
+        let result = vector_op(vop, n, m, v1, v2);
+        V(dest) = sail_zero_extend(merge(n, m, result), sizeof(vlenmax))
+}
+
+function clause decode _ = throw Reserved("instruction")
+
+val main : unit -> unit
+
+//======================================================================
+function main() = {
+    if split(2, 4, 0xAB) == [0xA, 0xB] then {
+        print_endline("ok")
+    };
+    if split(8, 1, 0x53) == [0b0, 0b1, 0b0, 0b1, 0b0, 0b0, 0b1, 0b1] then {
+        print_endline("ok")
+    };
+    if merge(2, 4, split(2, 4, 0xAB)) == 0xAB then {
+        print_endline("ok")
+    };
+
+    V0 = 0x0000_1100_2200_3300_4400_5500_6600_7700_8800_9900_AA00_BB00_CC00_DD00_EE00_FF00_FFFE_1100_2200_3300_4400_5500_6600_7700_8800_9900_AA00_BB00_CC00_DD00_EE00_FFFF;
+    V1 = 0x0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001;
+    VLEN = 0b10; // 256
+
+    // add V0 to V1 in 64 groups of 4, storing the result in V2
+    decode(0b0110 @ 0xFFFFF @ 0b00 @ 0b10 @ 0b00 @ 0b01);
+    // add V0 to V1 in 16 groups of 16, storing the result in V3
+    decode(0b0100 @ 0xFFFFF @ 0b00 @ 0b11 @ 0b00 @ 0b01);
+   
+    print_bits("V2 = ", V2);
+    print_bits("V3 = ", V3);
+
+    VLEN = 0b11; // 512
+
+    // add V2 to V3 as a single 512 bit value, storing the result in V2
+    decode(0b0000 @ 0xFFFFF @ 0b00 @ 0b10 @ 0b10 @ 0b11);
+
+    print_bits("V2 = ", V2);
+}
+----
+
+
 
 == Execution
 === Functions
@@ -623,14 +930,14 @@ function my_replicate_bits_2(n, xs) = {
   ys
 }
 
-// The following comment is of interest for reasons other than
+// The following comment is of interest for reasons other than 
 //  functionality.  The Sail syntax is still being developed.
 //  Attention should be paid to the issues reported to the Sail
 //  team (via github) and when releases are made (again via github).
 
 // The following is deprecated per Alasdair Armstrong:
-//  I would just remove that example as the cast feature is now
-//  deprecated in the latest version (and the risc-v model has
+//  I would just remove that example as the cast feature is now 
+//  deprecated in the latest version (and the risc-v model has 
 //  always used a flag fully disabling it anyway)
 
 // val cast extz : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
@@ -680,7 +987,7 @@ $include "my_replicate_bits_function_signatures.sail"
 
 
 val main : unit -> unit
-function main() =
+function main() = 
     {
     v1 : bits(8)  = 0x55;
     v2 : bits(32) = 0x00000000;
@@ -691,13 +998,13 @@ function main() =
 //    num : int = 4;            // CE
 //    let num : int(4) = 4;     // Works
 //    let num : int(4) = 5;     // CE
-//    let num : int(5) = 5;
+//    let num : int(5) = 5;     
 //    let num : int(4) = 3;     // CE
     let num : int(4) = 3 + 1;
 
     print("calling my_replicate_bits() .....\n");
 
-    // The compiler needs to evaluate
+    // The compiler needs to evaluate 
 //    v2 = my_replicate_bits (num, v1);
     v3 : bits(32) = my_replicate_bits (num, v1);
 //    v3 : bits(32) = my_replicate_bits (4, v1);
@@ -723,7 +1030,7 @@ signature file, my_replicate_bits_function_signatures.sail:
 // ============================================================================
 // Filename:    my_replicate_bvits_function_signatures.sail
 //
-// Description:
+// Description: 
 //
 // Author(s):   Bill McSpadden (bill@riscv.org)
 //
@@ -786,45 +1093,45 @@ overload operator - = sub_bits
 
 val not_vec = {c: "not_bits", _: "not_vec"} : forall 'n. bits('n) -> bits('n)
 
-let aes_sbox_inv_table : list(bits(8)) =
+let aes_sbox_inv_table : list(bits(8)) = 
     [|
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
-    0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
-    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87,
-    0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
+    0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb, 
+    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 
+    0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb, 
 
-    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d,
-    0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
-    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2,
-    0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
+    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 
+    0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e, 
+    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 
+    0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25, 
 
     0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16,
-    0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
-    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
-    0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+    0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92, 
+    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 
+    0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84, 
 
     0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a,
-    0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
-    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02,
+    0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06, 
+    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 
     0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
 
-    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea,
-    0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
-    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85,
-    0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
+    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 
+    0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73, 
+    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 
+    0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e, 
 
-    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89,
-    0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
+    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 
+    0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b, 
     0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20,
-    0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+    0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4, 
 
-    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31,
+    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 
     0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
-    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d,
-    0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
+    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 
+    0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef, 
 
-    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0,
-    0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 
+    0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61, 
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26,
     0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
     |]
@@ -834,9 +1141,9 @@ let aes_sbox_inv_table : list(bits(8)) =
 // x'th element of that list.
 
 val sbox_lookup : (bits(8), list(bits(8))) -> bits(8)
-function sbox_lookup(x, table) =
+function sbox_lookup(x, table) = 
     {
-    match (x, table)
+    match (x, table) 
         {
         (0x00, head::tail) => head,
         (   y, head::tail) => sbox_lookup(x - 0x01, tail)
@@ -844,10 +1151,10 @@ function sbox_lookup(x, table) =
     }
 
 val main : unit -> unit
-function main() =
+function main() = 
     {
     let x : bits(8) = 0x03;
-
+    
     print_bits("lookup results: ", sbox_lookup(x, aes_sbox_inv_table));
 
     }
@@ -1029,7 +1336,7 @@ void zexecute(sail_int *zcbz30, struct zast zmergez3var)
     ...
     CONVERT_OF(sail_int, mach_int)(&zgsz31, INT64_C(17));
     ...
-case_2:
+case_2: 
     ...
     CONVERT_OF(sail_int, mach_int)(&zgsz33, INT64_C(19));
     ...
@@ -1037,7 +1344,7 @@ case_3:
     ...
     CONVERT_OF(sail_int, mach_int)(&zgsz35, INT64_C(23));
    ...
-}
+}      
 ----
 
 **Warning.** The Sail compiler does aggressive  dead code elimination: Sail functions, like `giraffe4` which are not used (called) get eliminated and do **not** appear in the generated C code.
@@ -1078,7 +1385,7 @@ val cfunc_str = { c: "cfunc_str" } : unit -> string
 
 val main : unit -> unit
 
-function main() =
+function main() = 
     {
     print("hello, world!\n") ;
     print("hello, another world!\n") ;
@@ -1121,7 +1428,7 @@ First,  the cfunc.h file ....
 
 #pragma once
 
-#include "sail.h"
+#include "sail.h" 
 
 //#define INT_RET_TYPE    sail_int
 #define INT_RET_TYPE    int
@@ -1160,8 +1467,8 @@ And now,  cfunc.c,  which implements the functions...
 
 
 INT_RET_TYPE
-//cfunc_int(sail_int *zret_int, bool b)
-cfunc_int(sail_int *zret_int, unit u)
+//cfunc_int(sail_int *zret_int, bool b) 
+cfunc_int(sail_int *zret_int, unit u) 
     {
 //    mpz_set_ui(zret_int, 142);
     mpz_set_ui(*zret_int, 142);
@@ -1190,7 +1497,7 @@ cfunc_str(sail_string * zret_str, unit u)
     //  in the calling code.  The calling code assumes that
     //  memory has been malloc'd for the string,  and when
     //  it's free'd,  you get a seg fault.  So,  I re-wrote
-    //  the code to do the actual malloc. But note the
+    //  the code to do the actual malloc. But note the 
     //  assymetry of the memory management:  the space is
     //  allocated here,  but free'd at the calling level.
     //  This is,  at least,  ugly code.  And,  at worst,
@@ -1222,7 +1529,7 @@ Here is the Makefile used to compile all of this.
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log
+# Revision:		See revision control log 
 #
 # ================================================================
 
@@ -1243,8 +1550,8 @@ SAIL_LIB		:= ${SAIL_PATH}/lib/sail
 SAIL			:= ${SAIL_BIN}/sail
 SAIL_OUTFILE	:= out
 SAIL2C_INC		:= -c_include cfunc.h
-#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE}
-SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE}
+#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE} 
+SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE} 
 
 # TODO:  fix this.  Need to find an installation home for these C files.
 # 		Perhaps compile a library?
@@ -1290,7 +1597,7 @@ ddd: out
 out: out.c cfunc.c cfunc.h
 	SAIL_DIR=${SAIL_DIR} ; export SAIL_DIR ; \
 	gcc ${CCFLAGS} ${C_SRC} -lgmp -lz -I ${SAIL_DIR}/lib -o $@
-
+	
 
 #	gcc out.c ${SAIL_DIR}/lib/*.c -lgmp -lz -I ${SAIL_DIR}/lib -o $@
 
@@ -1366,7 +1673,7 @@ In the following Sail file,  we go looking for the setting for /hart0/physical_a
 // ============================================================================
 // Filename:    sail_calls_cfunc.sail
 //
-// Description: Example sail file calling C functions that access riscv yaml
+// Description: Example sail file calling C functions that access riscv yaml 
 //              config file
 //
 // Author(s):   Bill McSpadden (bill@riscv.org)
@@ -1383,6 +1690,7 @@ val "print"         : string -> unit
 val "print_int"     : int -> unit
 
 val cfunc_int           = { c: "cfunc_int" }        : (string, string)  -> int
+val cfunc_string        = { c: "cfunc_string" }     : (string, string)  -> string
 
 //val "func_dump_yaml"    = { c: "cfunc_dump_yaml" }  : (string)          -> unit   // syntax error
 //val func_dump_yaml    = { c: "cfunc_dump_yaml" }  : (string)          ->        // syntax error
@@ -1390,7 +1698,7 @@ val cfunc_dump_yaml     = { c: "cfunc_dump_yaml" }  : (string)          -> unit
 
 val main : unit -> unit
 
-function main() =
+function main() = 
     {
     let yaml_filename : string = "./rv32i_isa.yaml";
 
@@ -1398,8 +1706,14 @@ function main() =
 
     cfunc_dump_yaml(yaml_filename);
 
-    let ret : int = cfunc_int(yaml_filename, "/hart0/physical_addr_sz");
+    //let ret : int = cfunc_int(yaml_filename, "/hart0/physical_addr_sz");
+    let ret : int = cfunc_int(yaml_filename, "/hart0/misa/reset-val");
     print_int("cfunc_int: ", ret );
+    print("\n");
+
+    let ret2 : string = cfunc_string(yaml_filename, "/hart0/ISA");
+    print("cfunc_string: "); print(ret2);
+    print("\n");
 
 
     }
@@ -1439,7 +1753,7 @@ cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
     unsigned int            yaml_val_int;
     int                     count;
     char                    *tmp_str;
-    char                    *conversion_str = " %d";
+    char                    *conversion_str = " %i";
 
     tmp_str = malloc(strlen(yaml_key_str) + strlen(conversion_str));
     strcpy(tmp_str, yaml_key_str);
@@ -1471,6 +1785,56 @@ cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
     return(1);
     }
 
+char *
+cfunc_string(sail_string **s,  char *yaml_filename, char * yaml_key_str)
+//cfunc_string(sail_string s,  char *yaml_filename, char * yaml_key_str)
+//cfunc_string(sail_string *s,  char *yaml_filename, char * yaml_key_str)
+//cfunc_string(sail_string s,  char *yaml_filename, char * yaml_key_str)
+    {
+    struct fy_document      *fyd = NULL;
+    char                    yaml_val_string[1024];
+    int                     count;
+    char                    *tmp_str;
+    char                    *conversion_str = " %1023s";    // str len to ensure no overruns
+    char *                  ret_str_ptr;
+
+    tmp_str = malloc(strlen(yaml_key_str) + strlen(conversion_str));
+    strcpy(tmp_str, yaml_key_str);
+    strcat(tmp_str, conversion_str);
+
+    fyd = fy_document_build_from_file(NULL, yaml_filename);
+    if ( !fyd )
+        {
+        fprintf(stderr, "error: failed to build document from yaml file, %s\n", yaml_filename);
+        exit(1);
+        }
+
+    count = fy_document_scanf(fyd, tmp_str, yaml_val_string);
+    if (count == 1)
+        {
+        printf("%s, %d: found the key-string and it has a value: '%s'\n", __FILE__, __LINE__, yaml_val_string);
+        ret_str_ptr = malloc(strlen(yaml_val_string));
+        strcpy(ret_str_ptr, yaml_val_string);
+        printf("ret_str_ptr: '%s'\n", ret_str_ptr);
+        *s = ret_str_ptr;
+//        s = ret_str_ptr;
+        }
+    else
+        {
+        fprintf(stderr, "error: value for key, '%s',  not found in yaml file, '%s'\n", yaml_key_str, yaml_filename);
+        // TODO: figure out a return mechanism and let caller decide on action.
+        exit(1);
+        }
+
+    // TODO:  need to de-allocate memory from fy_document_build_from_file()
+    printf("%s, %d: freeing fyd...\n", __FILE__, __LINE__); fflush(stdout);
+    free(fyd);
+    printf("%s, %d: freeing tmp_str...\n", __FILE__, __LINE__); fflush(stdout);
+    free(tmp_str);
+
+    return(s);
+    }
+
 unit
 cfunc_dump_yaml(char *yaml_filename)
     {
@@ -1495,7 +1859,7 @@ And finally,  here is the Makefile that builds the executable:
 #
 # Author(s):	Bill McSpadden (bill@riscv.org)
 #
-# Revision:		See revision control log
+# Revision:		See revision control log 
 #
 # ================================================================
 
@@ -1516,8 +1880,8 @@ SAIL_LIB		:= ${SAIL_PATH}/lib/sail
 SAIL			:= ${SAIL_BIN}/sail
 SAIL_OUTFILE	:= out
 SAIL2C_INC		:= -c_include cfunc.h
-#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE}
-SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE}
+#SAIL_FLAGS		:= -c ${SAIL2C_INC} -o ${SAIL_OUTFILE} 
+SAIL_FLAGS		:=  ${SAIL2C_INC} -c -o ${SAIL_OUTFILE} 
 
 # TODO:  fix this.  Need to find an installation home for these C files.
 # 		Perhaps compile a library?
@@ -1654,7 +2018,7 @@ $include "./prelude.sail"
 // Enums must be defined after prelude.sail for some reason.
 //  Question sent to Alasdair about this on 2022-07-22
 //
-// This enum must be defined before the function signatures
+// This enum must be defined before the function signatures 
 //  in "scattered_definitions_include.sail" else we get a
 //  compilation error
 enum enum_e = a_enum_e | b_enum_e | c_enum_e        // No Compile error
@@ -1662,7 +2026,7 @@ $include "scattered_definitions_include.sail"
 
 scattered function func
 
-function main() =
+function main() = 
     {
     print("hello, world!\n") ;
     print("calling function 'func'....\n");
@@ -1801,17 +2165,11 @@ include ../Makefile.generic
 
 ----
 
-
-
-
-===  __FILE__ , __LINE__ , __LOC__
-
 === Variable argument list support
 
-What support does Sail have for a variable argument
-list for its functions?
-
-TBD
+There is no native Sail support for variable argument lists.  This is primarily
+noticeable in the `print()` functions.  This limitation is worked around by
+simply doing a set of appropriate print funtions.
 
 == Description prelude.sail
 
