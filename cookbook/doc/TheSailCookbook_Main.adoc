@@ -595,6 +595,30 @@ We wanted VLEN to be dynamically configurable and not a compile time setting.
 include::../functional_code_snippets/alasdairs_vector_example/alasdairs_vector_example.sail[]
 ----
 
+== Operators
+=== Aadding a non-native operator:  shifts
+
+In the Sail Manual,  we have the following table:
+
+image:images/sail_operator.png[]
+
+Note that there is no shift operator in the table.  And a shift operator is really
+useful. Is there a method for adding an operator?  Yes,  there is.  And this example
+shows how it is done,  and we'll do it for the shift-left and shift-right operators.
+Here's the code, in 2 files:
+
+`shift_operator.sail:`
+[source, sail]
+----
+include::../functional_code_snippets/shift_operator/shift_operator.sail[]
+----
+
+`shift_operator_support.sail:`
+[source, sail]
+----
+include::../functional_code_snippets/shift_operator/shift_operator_support.sail[]
+----
+
 
 
 == Execution

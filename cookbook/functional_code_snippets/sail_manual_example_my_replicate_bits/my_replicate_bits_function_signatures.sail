@@ -13,7 +13,8 @@ $include <prelude.sail>
 
 val "print" : string -> unit
 
-val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. 
+        (int('n), bits('m)) -> bits('n * 'm)
 
 val main : unit -> unit
 

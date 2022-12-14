@@ -141,7 +141,23 @@ TBD
 
 === MacOS (Martin)
 
-TBD
+
+Installation with `brew` and `opam` is straighforward. On my
+MacBook Pro, with an M1 Processor, runniung Ventura 13.0.1, I followed
+the instructions at https://github.com/rems-project/sail/blob/sail2/INSTALL.md[]
+
+
+I use brew (https://brew.sh/) to install software. With brew I install opam https://opam.ocaml.org/ and Ocaml itself (https://ocaml.org/). Then I follow these steps:
+
+----
+    ocaml -version
+    eval $(opam config env)
+    xcode-select --install
+    brew install gmp z3 pkg-config
+    opam install sail
+----
+
+Depending what is already installed on your computer, some of the above my not be necessary. When running `opam install sail` you will be asked `Do you want to continue?` and you need to answer `y`. You can run `sail -v` to see what version you have installed.
 
 === Docker
 
@@ -163,23 +179,61 @@ Other Linux distis?  Or will Docker support?
 
 == Basic description
 === What Sail is
-Sail is a programming language that is targetted for
- specifying an ISA.  Once specified, a set of
-instructions (usually found in a .elf file) can then
-be executed on the "model" and the results observed.
+Sail is a domain-specific programming language that is
+intended for specifying an ISA in as convenient and rigorous a manner as possible. Sail's main focus is verification. Once specified, a Sail program can be compiled to multiple backends:
+
+- A C-model. This is an ISA simulator. It takes as input
+ a set of instructions (usually found in a .elf file), and runs them. The results observed.
+
+- Various prover backends, including
+  - Isabelle/HOL
+  - HOL
+  - Coq
+  - SMT-LIB
+  Since a processor is essentially a state transformer, the specification is translated to a logical formula that expresses  the state transition relation logically.
 
 The model is a sequential model only;  at this time,
 there are no semantics allowing for any type of parallel
 execution.
 
-=== What sail is not
+=== What Sail is not
+
 Sail is not an RTL (Register Transfer Language).
 There is no direct support for timing (as in clock
 timing) and there is no support for parallel execution,
 all things that an RTL contains.
 
-=== version management and what to expect
-TBD
+A mental model for Sail is that it lets you express what an **external** oberver, i.e. software can see of a processor. Sail is not about micro-architecture.
+
+
+== Sail compilation
+
+=== Cambridge compiler
+
+Sail has currently one main compiler, https://github.com/rems-project/sail[see here]. It currently compiles to the following backends.
+
+1. Simulators (which run programs of the modelled ISA):
+  - C simulator (this is the main one)
+  - Ocaml simulator (exists mostly for historical purposes)
+
+2. Logical theories (which render the description of the ISA in logical form) using the following logical systems:
+    - Isabelle/HOL (see e.g. https://github.com/riscv/sail-riscv/tree/master/prover_snapshots/isabelle[here] for RISC-V models in HOL.)
+    - HOL4
+    - Coq
+    - SMT-LIB
+
+Building the Sail system itself is a multi-stage meta-programming process, that the picture below captures in some detail.
+
+image:./images/sail.svg[]
+
+=== Pydrofoil backend.
+
+Sail was developed with a  emphasis on correctness and verification. One consequence is that the compiler from Sail to C is quite conservative in its optimisations, since correctness of compiler optimisatins is highly nonp-trivial. Hence generated C-simulators can be relatively slow.
+
+https://github.com/pydrofoil/pydrofoil[Pydrofoil] is a new tracing-JIT compiler for Sail, based on the https://www.pypy.org/[PyPy] meta-tracing framework. This is currently under active development. As of December 2022, support for infinite precision floating point arithmetic is  the main missing feature.
+
+
+
 
 [#hello_world]
 == “Hello, World” example program (Bill)
@@ -533,15 +587,96 @@ loc:  print__FILE__LOC__.sail:20.27-20.34
 ubuntu-VirtualBox 260>
 ```
 
-== Data types
-=== effect annotations
+== Data types (and kinds)
+
+Sail is a straightforward language, with one notable exception. Sail is designed to be a minimal language that is only good at one thing: writing ISA interpreters. It offers a lot of support that make this easy.
+
+- Infinite precision integer and floating point numbers
+- String support for bits
+- Strong support for bit vectors
+- Convenient support for named bitfields
+- Union types to support tracking state
+- Effect annotations
+
+The two most notable changes from normal languages are:
+
+- Only first-order functions. So, unlike e.g. C or Python, we cannot pass functions as arguments, and can also not return functions.
+- **Liquid types.** They may be the most unusual of Sail's features. They are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
+
+
+=== Infinite precision integer, naturals and floating point data types
+
+All processors have finite precision arithmetic. The exact behaviour of
+finite precision arithmetic is difficult to define correctly, since there are so many edge cases, to do with overflow, underflow and rounding.
+
+In the past, finite precision arithmetic was defined in an a  host language like C or C++ which  itself has
+finite precision arithmetic, typically not quite the same as that of the guest ISA to be defined. That is even more complex, because the specification  needed to deal with the cartesian product of the edge cases of both, the host language and the guest ISA.
+
+Sail sidesteps this problem by providing infinite precision integer and floating point data types, which makes simplifies the problem a great deal, since the host language (Sail) has (almost) no edge cases.
+
+Sail has 3 built-in infinite precision arithmetic types:
+
+- Arbitrary precision integers: `int`
+- Arbitrary precision naturals: `nat`
+- Arbitrary precision reals: `real` (but no floating-point arithmetic).
+
+All are useable for specifying finite precision arithmetic.
+
+
+### Range types:
+
+- Integer ranges `range(′n,′ m)` where  he type `range(’n,’m)` is
+an inclusive range between the `Int`-kinded type-variables `’n` and `’m`
+- The type `int(’o)` is an integer
+exactly equal to the `Int`-kinded type-variable `’n`, i.e. `int(’o)` = `range(’o,’o)`.
+
+All these types can be used interchangeably provided the rules summarised in the below diagram are satisfied (via constraint solving). ![](images/conversion.png)
+
+### Vectors
+
+### Bits and bit vectors
+
+### Strings
+
+- Strings
+
+- `bit` type with members `bitzero` and `bitone`. Note: `bit` is **not** a numeric type, i.e. not `range(0, 1)`
+
 === Integers
 - Int
 - int
 - Multi-precision
 
-=== type variables
-What does " 'n " mean?
+=== Type variables and kinding
+Many languages have generics.  In C++ you might see a template class definition like
+
+----
+template <class T>
+class C {
+  private:
+  T* p;
+  public:
+  T func(T t) { return t; }
+};
+----
+
+This class is parameterised by `T` which is a placeholder for a type. We can instatiate `T` by other types. We call parameters like `T` a *type variable*. In Java we also have generics, e.g.
+
+----
+class C<T>{
+    T t;
+    void set(T t){this.t=t;}
+    T func(){return t;}
+}
+----
+
+Here, too *T* is a type variable.
+
+Sail, too, has type variables. They are written `'n` with a tick. However, Sail does not have full generics in the sense of C++ and Java, where type variables can be instantiated by (almost) arbitrary other types. In Sail yype variables are used for liquid types, described below.
+
+=== Effect annotations
+
+Effect annotations are automatically inferred as of Sail v0.15.
 
 === Bits
 
@@ -600,9 +735,21 @@ TODO: this example is too RISCV specific (requires `xlenbits`), use something mo
 
 === Liquid data types (Martin)
 
-"Liquid": Portmanteau of "Logically Qualified"
+The name Liquid Types is a portmanteau of *L* og *i* cally *Qu* alified *D* ata Types.
 
-http://goto.ucsd.edu/\~ucsdpl-blog/liquidtypes/2015/09/19/liquid-types/#:~:text=Liquid%20Types%20are%20a%20constraint,integer%20linear%2C%20set%20theory%20etc. [A Gentle Introduction to Liquid Types By Niki Vazou]
+ISA specification is drenched with bit-vectors. Assigning, e.g. a
+32-bit vector to a 48-bit vector is almost always wrong. Likewise,
+asking for the 19th bit of a 16-bit vector is most likely a
+problem. In mainstream programming languages like C, C++ or Java, such
+errors are typically only caught at run-time.  Liquid types exist to
+catch such problems at *compile-time*.
+
+With liquid types it is possible to type a function that thats an integer `n`
+and a bitvector of length `n`, and returns a bitvector of length `n*n`. The
+typing system also ensure that all calls to such a function pass and receive bitvectors of appropriate size.
+
+For the cognoscenti we remark that liquid types are a form of dependent types, since numbers like `m` and `n` are parts of types. But unlike general dependent types, which have undecidable type-inference, and type-checking, liquid types are suitably restricted so that, simplifying a bit, type-inference remains decidable (and is handled by an SMT solver, Z3 in the current implementation of Sail).
+
 
 === A more complicated example
 
@@ -802,6 +949,101 @@ function main() = {
 }
 ----
 
+== Operators
+=== Aadding a non-native operator:  shifts
+
+In the Sail Manual,  we have the following table:
+
+image:images/sail_operator.png[]
+
+Note that there is no shift operator in the table.  And a shift operator is really
+useful. Is there a method for adding an operator?  Yes,  there is.  And this example
+shows how it is done,  and we'll do it for the shift-left and shift-right operators.
+Here's the code, in 2 files:
+
+`shift_operator.sail:`
+[source, sail]
+----
+//===========================================================================
+// The purpose of this code fragment is to demonstrate operator overloading
+//  for those operators that are not natively supported.  In this example,
+//  we will be demonstrating the creation of,  and the overloading of, the
+//  shift operators, << and >>.
+//===========================================================================
+default Order dec
+$include <prelude.sail>
+$include "shift_operator_support.sail"
+
+// Fixity must be specified in every file in which it is used.
+infix 7 >>
+infix 7 <<
+
+// ========================================================
+// Function signatures (same idea as C's function prototype)
+// ========================================================
+
+val "print" : string -> unit
+
+val main : unit -> unit
+
+// ========================================================
+// The entry point into the program starts at the function, main.
+// ========================================================
+function main() = 
+    {
+    print("hello, world!\n") ;
+    print("hello, another world!\n") ;
+
+    v : bits(8) = 0x1e ;
+
+    v = v << 4;
+
+    print_bits("v: ", v);
+
+    }
+
+----
+
+`shift_operator_support.sail:`
+[source, sail]
+----
+//===========================================================================
+// Because the following code is generally useful, it should be put in 
+//  an include file like <prelude.sail>.  For RISC-V,  this is the case.
+
+val EXTS : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+val EXTZ : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+
+function EXTS(m, v) = sail_sign_extend(v, m)
+function EXTZ(m, v) = sail_zero_extend(v, m)
+
+// Fixity must be specified in every file in which it is used.
+infix 7 >>
+infix 7 <<
+
+val "shift_bits_right" : forall 'n 'm. (bits('n), bits('m)) -> bits('n)
+val "shift_bits_left"  : forall 'n 'm. (bits('n), bits('m)) -> bits('n)
+
+val "shiftl" : forall 'm 'n, 'n >= 0. (bits('m), atom('n)) -> bits('m)
+val "shiftr" : forall 'm 'n, 'n >= 0. (bits('m), atom('n)) -> bits('m)
+
+overload operator >> = {shift_bits_right, shiftr}
+overload operator << = {shift_bits_left, shiftl}
+
+// Ideally these would be sail builtin
+
+function shift_right_arith64 (v : bits(64), shift : bits(6)) -> bits(64) =
+    let v128 : bits(128) = EXTS(v) in
+    (v128 >> shift)[63..0]
+
+function shift_right_arith32 (v : bits(32), shift : bits(5)) -> bits(32) =
+    let v64 : bits(64) = EXTS(v) in
+    (v64 >> shift)[31..0]
+
+
+
+----
+
 
 
 == Execution
@@ -911,22 +1153,12 @@ following code shows the implementation of a
 [source, sail]
 ----
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    main.sail
-//
-// Description: Example sail file
-//
-// Author(s):   Bill McSpadden (bill@riscv.sail)
-//
-// Revision:    See revision control log
-// ============================================================================
 
 default Order dec
 $include <prelude.sail>
 
 val "print" : string -> unit
 
-//val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
 $include "my_replicate_bits_function_signatures.sail"
 
 
@@ -985,7 +1217,8 @@ $include <prelude.sail>
 
 val "print" : string -> unit
 
-val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. (int('n), bits('m)) -> bits('n * 'm)
+val my_replicate_bits : forall 'n 'm, 'm >= 1 & 'n >= 1. 
+        (int('n), bits('m)) -> bits('n * 'm)
 
 val main : unit -> unit
 
@@ -1357,18 +1590,6 @@ First,  the cfunc.h file ....
 [source, c]
 ----
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    cfunc.h
-//
-// Description: Functions prototype support for cfunc
-//
-// Author(s):   Bill McSpadden (bill@riscv.org)
-//
-// Revision:    See git log
-// ============================================================================
-//#ifndef __CFUNC_H__
-//#define __CFUNC_H__
-//
 
 #pragma once
 
@@ -1416,10 +1637,16 @@ cfunc_int(sail_int *zret_int, unit u)
     {
 //    mpz_set_ui(zret_int, 142);
     mpz_set_ui(*zret_int, 142);
-//    mpz_set_ui(zret_int, 9223372036854775808 );                       // 2 ^ 64           // works
-//    mpz_set_ui(zret_int, (9223372036854775808 + 1) );                 // (2 ^ 64) + 1     // works
-//    mpz_set_ui(zret_int, (123456789012345678901234567890) );          // fails: sail.test prints out incorrect number But the next example works.
-//    mpz_init_set_str(*zret_int, "123 456 789 012 345 678 901 234 567 890", 10 );  // NOTE: white space allowed in string // works
+
+// 2 ^ 64           // works
+//    mpz_set_ui(zret_int, 9223372036854775808 );                       
+// (2 ^ 64) + 1     // works
+//    mpz_set_ui(zret_int, (9223372036854775808 + 1) );                 
+// fails: sail.test prints out incorrect number But the next example works.
+//    mpz_set_ui(zret_int, (123456789012345678901234567890) );          
+
+// NOTE: white space allowed in string // works
+//    mpz_init_set_str(*zret_int, "123 456 789 012 345 678 901 234 567 890", 10 );  
 
     return(42); // TODO: Nothing is done with this return value, right?
     }
@@ -1614,16 +1841,6 @@ In the following Sail file,  we go looking for the setting for /hart0/physical_a
 [source, sail]
 ----
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    sail_calls_cfunc.sail
-//
-// Description: Example sail file calling C functions that access riscv yaml 
-//              config file
-//
-// Author(s):   Bill McSpadden (bill@riscv.org)
-//
-// Revision:    See git log
-// ============================================================================
 
 default Order dec
 $include <prelude.sail>
@@ -1636,8 +1853,6 @@ val "print_int"     : int -> unit
 val cfunc_int           = { c: "cfunc_int" }        : (string, string)  -> int
 val cfunc_string        = { c: "cfunc_string" }     : (string, string)  -> string
 
-//val "func_dump_yaml"    = { c: "cfunc_dump_yaml" }  : (string)          -> unit   // syntax error
-//val func_dump_yaml    = { c: "cfunc_dump_yaml" }  : (string)          ->        // syntax error
 val cfunc_dump_yaml     = { c: "cfunc_dump_yaml" }  : (string)          -> unit
 
 val main : unit -> unit
@@ -1673,15 +1888,6 @@ opens a YAML file,  searches for the key,  and then returns the value.
 [source, c]
 ----
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    cfunc.c
-//
-// Description: Functions to be called by Sail to get values from a yaml file.
-//
-// Author(s):   Bill McSpadden (bill@riscv.org)
-//
-// Revision:    See git log
-// ============================================================================
 
 #include <sail.h>
 #include "cfunc.h"
@@ -1717,7 +1923,9 @@ cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
         }
     else
         {
-        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", yaml_key_str, yaml_filename);
+        fprintf(stderr, "error: value for key, %s,  not found in yaml file, %s\n", 
+                    yaml_key_str, yaml_filename);
+
         // TODO: figure out a return mechanism and let caller decide on action.
         exit(1);
         }
@@ -1731,9 +1939,6 @@ cfunc_int(sail_int *zret_int,  char *yaml_filename, char * yaml_key_str)
 
 char *
 cfunc_string(sail_string **s,  char *yaml_filename, char * yaml_key_str)
-//cfunc_string(sail_string s,  char *yaml_filename, char * yaml_key_str)
-//cfunc_string(sail_string *s,  char *yaml_filename, char * yaml_key_str)
-//cfunc_string(sail_string s,  char *yaml_filename, char * yaml_key_str)
     {
     struct fy_document      *fyd = NULL;
     char                    yaml_val_string[1024];
@@ -1749,23 +1954,25 @@ cfunc_string(sail_string **s,  char *yaml_filename, char * yaml_key_str)
     fyd = fy_document_build_from_file(NULL, yaml_filename);
     if ( !fyd )
         {
-        fprintf(stderr, "error: failed to build document from yaml file, %s\n", yaml_filename);
+        fprintf(stderr, "error: failed to build document from yaml file, %s\n", 
+                yaml_filename);
         exit(1);
         }
 
     count = fy_document_scanf(fyd, tmp_str, yaml_val_string);
     if (count == 1)
         {
-        printf("%s, %d: found the key-string and it has a value: '%s'\n", __FILE__, __LINE__, yaml_val_string);
+        printf("%s, %d: found the key-string and it has a value: '%s'\n", 
+                __FILE__, __LINE__, yaml_val_string);
         ret_str_ptr = malloc(strlen(yaml_val_string));
         strcpy(ret_str_ptr, yaml_val_string);
         printf("ret_str_ptr: '%s'\n", ret_str_ptr);
         *s = ret_str_ptr;
-//        s = ret_str_ptr;
         }
     else
         {
-        fprintf(stderr, "error: value for key, '%s',  not found in yaml file, '%s'\n", yaml_key_str, yaml_filename);
+        fprintf(stderr, "error: value for key, '%s',  not found in yaml file, '%s'\n", 
+                yaml_key_str, yaml_filename);
         // TODO: figure out a return mechanism and let caller decide on action.
         exit(1);
         }
@@ -2124,9 +2331,317 @@ of many support functions.
 === the C interface
 
 [#simple_cpu_example]
-== Simple CPU example (Martin)
-- From nand2tetris
 
+== Simple CPU example (nand2tetris)
+
+A famous computer science textbook, https://www.nand2tetris.org/[The Elements of Computing Systems], defines a simple 16 bit CPU. The entire ISA dedfinition fits in 220 lines  of Sail and about 80 lines of supporting C. Here is the Sail code, written by John Witulski and
+Carl Friedrich Bolz-Tereick. (See https://github.com/pydrofoil/pydrofoil/blob/main/pydrofoil/test/nand2tetris/[here] for the original code.)
+
+----
+default Order dec
+
+$include <prelude.sail>
+
+val sub_vec = {c: "sub_bits", _: "sub_vec"} : forall 'n. (bits('n), bits('n)) -> bits('n)
+
+val sub_vec_int = {c: "sub_bits_int", _: "sub_vec_int"} : forall 'n. (bits('n), int) -> bits('n)
+
+overload operator - = {sub_vec, sub_vec_int}
+
+val bits1_to_bool : bits(1) -> bool
+
+function bits1_to_bool b = match b {
+  0b1  => true,
+  0b0 => false
+}
+
+val write_mem = { _: "my_write_mem" }
+  : (bits(16), bits(16)) -> unit effect {wmv}
+
+val read_mem = { _: "my_read_mem" }
+  : bits(16) -> bits(16)
+
+val read_rom = { _: "my_read_rom" }
+  : bits(16) -> bits(16)
+
+val print_debug = { _: "my_print_debug" }
+  : (bits(64), bits(16), bits(16), bits(16)) -> unit
+
+register PC : bits(16)
+register A : bits(16)
+register D : bits(16)
+
+enum arithmetic_op = {
+  C_ZERO,
+  C_ONE,
+  C_MINUSONE,
+  C_D,
+  C_A,
+  C_NOT_D,
+  C_NOT_A,
+  C_NEG_D,
+  C_NEG_A,
+  C_D_ADD_1,
+  C_A_ADD_1,
+  C_D_SUB_1,
+  C_A_SUB_1,
+  C_D_ADD_A,
+  C_D_SUB_A,
+  C_A_SUB_D,
+  C_D_AND_A,
+  C_D_OR_A
+}
+
+mapping decode_compute : arithmetic_op <-> bits(6) = {
+  C_ZERO       <-> 0b101010,
+  C_ONE        <-> 0b111111,
+  C_MINUSONE   <-> 0b111010,
+  C_D          <-> 0b001100,
+  C_A          <-> 0b110000,
+  C_NOT_D      <-> 0b001101,
+  C_NOT_A      <-> 0b110001,
+  C_NEG_D      <-> 0b001111,
+  C_NEG_A      <-> 0b110011,
+  C_D_ADD_1    <-> 0b011111,
+  C_A_ADD_1    <-> 0b110111,
+  C_D_SUB_1    <-> 0b001110,
+  C_A_SUB_1    <-> 0b110010,
+  C_D_ADD_A    <-> 0b000010,
+  C_D_SUB_A    <-> 0b010011,
+  C_A_SUB_D    <-> 0b000111,
+  C_D_AND_A    <-> 0b000000,
+  C_D_OR_A     <-> 0b010101
+}
+
+enum jump = { JDONT, JGT, JEQ, JGE, JLT, JNE, JLE, JMP }
+
+mapping decode_jump : jump <-> bits(3) = {
+  JDONT  <-> 0b000,
+  JGT    <-> 0b001,
+  JEQ    <-> 0b010,
+  JGE    <-> 0b011,
+  JLT    <-> 0b100,
+  JNE    <-> 0b101,
+  JLE    <-> 0b110,
+  JMP    <-> 0b111
+}
+
+
+scattered union instr
+val decode : bits(16) -> option(instr)
+val execute : instr -> unit effect {rreg, wreg, wmv}
+
+
+// A instruction
+
+union clause instr = AINST : (bits(16))
+
+function clause decode 0b0 @ x : bits(15)
+ = Some(AINST(sail_zero_extend(x, 16)))
+
+function clause execute(AINST(x)) = {
+  A = x; PC = PC + 1
+}
+
+// C instruction
+
+type destination = (bool, bool, bool)
+
+function decode_destination(b : bits(3)) -> destination = {
+    match b {
+        a : bits(1) @ d : bits(1) @ m : bits(1) => (bits1_to_bool(a), bits1_to_bool(d), bits1_to_bool(m))
+    }
+}
+
+union clause instr = CINST : (bits(1), arithmetic_op, (bool, bool, bool), jump)
+
+function clause decode 0b111 @ a : bits(1) @ c : bits(6) @ dest : bits(3) @ jump : bits(3)
+  = Some(CINST(a, decode_compute(c), decode_destination(dest), decode_jump(jump)))
+
+function clause decode _ = None()
+
+function compute_value(a : bits(1), op : arithmetic_op) -> bits(16) = {
+  let a = if a == 0b0 then A else read_mem(A);
+  let d = D;
+  let result : bits(16) = match op {
+    C_ZERO => 0x0000,
+    C_ONE => 0x0001,
+    C_MINUSONE => 0xffff,
+    C_D => d,
+    C_A => a,
+    C_NOT_D => not_vec(d),
+    C_NOT_A => not_vec(a),
+    C_NEG_D => 0x0000-d,
+    C_NEG_A => 0x0000-a,
+    C_D_ADD_1 => d + 0x0001,
+    C_A_ADD_1 => a + 0x0001,
+    C_D_SUB_1 => d - 0x0001,
+    C_A_SUB_1 => a - 0x0001,
+    C_D_ADD_A => d + a,
+    C_D_SUB_A => d - a,
+    C_A_SUB_D => a - d,
+    C_D_AND_A => d & a,
+    C_D_OR_A => d | a
+  };
+  result
+}
+
+function assign_dest((a : bool, d : bool, m : bool), value : bits(16)) -> unit = {
+    if m then { write_mem(A, value); };
+    if a then { A = value; };
+    if d then { D = value; }
+}
+
+function maybe_jump(value : bits(16), j : jump) -> unit = {
+    cond : bool = match j {
+      JDONT => false,
+      JGT   => signed(value) > 0,
+      JEQ   => signed(value) == 0,
+      JGE   => signed(value) >= 0,
+      JLT   => signed(value) < 0,
+      JNE   => signed(value) != 0,
+      JLE   => signed(value) <= 0,
+      JMP   => true
+    };
+    if cond then {PC = A;} else {PC = PC + 1;}
+}
+
+function clause execute(CINST(a, op, dest, jump)) = {
+  let value = compute_value(a, op);
+  assign_dest(dest, value);
+  maybe_jump(value, jump)
+}
+
+
+val fetch_decode_execute : unit -> bool
+
+function fetch_decode_execute () = {
+    let instr : bits(16) = read_rom(PC);
+    let x = decode(instr);
+    cont : bool = false;
+    match x {
+        Some(instr) => { execute(instr); cont = true; },
+        None() => { cont = false;}
+    };
+    return cont;
+}
+
+val run : (bits(64), bool) -> unit effect {rreg, wreg, wmv}
+
+function run(limit, debug) = {
+    cycle_count : bits(64) = 0x0000000000000000;
+    cont : bool = true;
+    while (cont) do {
+        cont = false;
+        if debug then {
+            print_debug(cycle_count, PC, A, D);
+        };
+        if fetch_decode_execute() then {
+            if signed(cycle_count) < signed(limit) then {
+                cont = true;
+            }
+        };
+        cycle_count = cycle_count + 0x0000000000000001;
+    }
+}
+
+function mymain(limit : bits(64), debug : bool) -> unit = {
+    PC = 0x0000;
+    A = 0x0000;
+    D = 0x0000;
+    run(limit, debug)
+}
+
+
+val main : unit -> unit
+
+function main() = { return mymain(0x0000000000000010, false); }
+
+
+----
+
+The supporting C code is
+----
+#include "sail.h"
+#include "rts.h"
+#include "elf.h"
+
+uint16_t *nand_mem;
+uint16_t *nand_rom;
+
+unit my_write_mem(uint16_t addr, uint16_t value) {
+    nand_mem[addr] = value;
+    return UNIT;
+}
+
+uint16_t my_read_rom(uint16_t addr) {
+    return nand_rom[addr];
+}
+
+uint16_t my_read_mem(uint16_t addr) {
+    return nand_mem[addr];
+}
+
+int model_main(int argc, char *argv[]);
+
+unit my_print_debug(uint64_t cycle_count, uint64_t PC, uint64_t A, uint64_t D) {
+  printf("PC: %ld, A: %ld, D: %ld, cycle count: %ld\n", PC, A, D, cycle_count);
+  return UNIT;
+}
+
+void model_init(void);
+unit zmymain(uint64_t, bool);
+void model_fini(void);
+void model_pre_exit();
+
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        fprintf(stderr, "usage: %s <rom binary> <cycle limit> <debug 1 or 0>\n", argv[0]);
+        return -1;
+    }
+    uint64_t limit = atol(argv[2]);
+    bool debug = argv[3][0] == '1';
+    FILE *fp = fopen(argv[1], "r");
+
+    if (!fp) {
+        fprintf(stderr, "rom %s could not be loaded\n", argv[1]);
+        return -2;
+    }
+    nand_rom = calloc(65536 * 2, 1);
+    nand_mem = calloc(65536 * 2, 1);
+
+    uint8_t *nand_rom_as_bytes = (uint8_t *)nand_rom;
+
+    uint64_t byte;
+    uint16_t addr = 0;
+    while ((byte = (uint64_t)fgetc(fp)) != EOF) {
+        nand_rom_as_bytes[addr++] = (uint8_t)byte;
+        if (addr >= 65536 * 2) {
+            fprintf(stderr, "rom too large!\n");
+            return -3;
+        }
+    }
+    model_init();
+    zmymain(limit, debug);
+    model_fini();
+    model_pre_exit();
+    return 0;
+}
+
+
+----
+We also need the following header file.
+----
+#include "sail.h"
+
+unit my_write_mem(uint16_t addr, uint16_t value);
+uint16_t my_read_rom(uint16_t addr);
+uint16_t my_read_mem(uint16_t addr);
+
+unit my_print_debug(uint64_t, uint64_t, uint64_t, uint64_t);
+
+
+----
 
 == Formal tools that analyze Sail source code
 

@@ -1,16 +1,4 @@
 // vim: set tabstop=4 shiftwidth=4 expandtab
-// ============================================================================
-// Filename:    cfunc.h
-//
-// Description: Functions prototype support for cfunc
-//
-// Author(s):   Bill McSpadden (bill@riscv.org)
-//
-// Revision:    See git log
-// ============================================================================
-//#ifndef __CFUNC_H__
-//#define __CFUNC_H__
-//
 
 #pragma once
 
