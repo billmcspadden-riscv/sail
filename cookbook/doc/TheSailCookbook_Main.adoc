@@ -440,7 +440,7 @@ The two most notable changes from normal languages are:
 - **Liquid types.** They may be the most unusual of Sail's features. They are a lightweight form of dependent types that can be used to prevent, at compile time, out-of-bounds errors and similar. To the best of our knowledge, Sail is the first non-experimental language with liquid types.
 
 
-=== Infinite precision integer and floating point data types
+=== Infinite precision integer, naturals and floating point data types
 
 All processors have finite precision arithmetic. The exact behaviour of
 finite precision arithmetic is difficult to define correctly, since there are so many edge cases, to do with overflow, underflow and rounding. 
@@ -450,7 +450,33 @@ finite precision arithmetic, typically not quite the same as that of the guest I
 
 Sail sidesteps this problem by providing infinite precision integer and floating point data types, which makes simplifies the problem a great deal, since the host language (Sail) has (almost) no edge cases.
 
+Sail has 3 built-in infinite precision arithmetic types:
 
+- Arbitrary precision integers: `int`
+- Arbitrary precision naturals: `nat`
+- Arbitrary precision reals: `real` (but no floating-point arithmetic). 
+
+All are useable for specifying finite precision arithmetic.
+
+
+### Range types:
+
+- Integer ranges `range(′n,′ m)` where  he type `range(’n,’m)` is
+an inclusive range between the `Int`-kinded type-variables `’n` and `’m`
+- The type `int(’o)` is an integer
+exactly equal to the `Int`-kinded type-variable `’n`, i.e. `int(’o)` = `range(’o,’o)`.
+
+All these types can be used interchangeably provided the rules summarised in the below diagram are satisfied (via constraint solving). ![](images/conversion.png)
+
+### Vectors
+
+### Bits and bit vectors
+
+### Strings
+
+- Strings
+
+- `bit` type with members `bitzero` and `bitone`. Note: `bit` is **not** a numeric type, i.e. not `range(0, 1)`
 
 === Integers
 - Int
@@ -540,9 +566,21 @@ TODO: this example is too RISCV specific (requires `xlenbits`), use something mo
 
 === Liquid data types (Martin)
 
-"Liquid": Portmanteau of "Logically Qualified"
+The name Liquid Types is a portmanteau of *L* og *i* cally *Qu* alified *D* ata Types.
 
-http://goto.ucsd.edu/\~ucsdpl-blog/liquidtypes/2015/09/19/liquid-types/#:~:text=Liquid%20Types%20are%20a%20constraint,integer%20linear%2C%20set%20theory%20etc. [A Gentle Introduction to Liquid Types By Niki Vazou]
+ISA specification is drenched with bit-vectors. Assigning, e.g. a
+32-bit vector to a 48-bit vector is almost always wrong. Likewise,
+asking for the 19th bit of a 16-bit vector is most likely a
+problem. In mainstream programming languages like C, C++ or Java, such
+errors are typically only caught at run-time.  Liquid types exist to
+catch such problems at *compile-time*.
+
+With liquid types it is possible to type a function that thats an integer `n`
+and a bitvector of length `n`, and returns a bitvector of length `n*n`. The
+typing system also ensure that all calls to such a function pass and receive bitvectors of appropriate size.
+
+For the cognoscenti we remark that liquid types are a form of dependent types, since numbers like `m` and `n` are parts of types. But unlike general dependent types, which have undecidable type-inference, and type-checking, liquid types are suitably restricted so that, simplifying a bit, type-inference remains decidable (and is handled by an SMT solver, Z3 in the current implementation of Sail). 
+
 
 === A more complicated example
 
