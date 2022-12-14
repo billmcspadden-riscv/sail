@@ -950,7 +950,7 @@ function main() = {
 ----
 
 == Operators
-=== Aadding a non-native operator:  shifts
+=== Adding a non-native operator:  shifts
 
 In the Sail Manual,  we have the following table:
 

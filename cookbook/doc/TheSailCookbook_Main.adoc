@@ -596,7 +596,7 @@ include::../functional_code_snippets/alasdairs_vector_example/alasdairs_vector_e
 ----
 
 == Operators
-=== Aadding a non-native operator:  shifts
+=== Adding a non-native operator:  shifts
 
 In the Sail Manual,  we have the following table:
 
