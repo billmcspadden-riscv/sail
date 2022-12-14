@@ -469,6 +469,70 @@ exactly equal to the `Int`-kinded type-variable `’n`, i.e. `int(’o)` = `rang
 All these types can be used interchangeably provided the rules summarised in the below diagram are satisfied (via constraint solving). ![](images/conversion.png)
 
 ### Vectors
+Let's start with an example:
+
+    let v : vector(3, dec, int) = [1, 2, 3]
+
+What do the three arguments mean?
+
+- The first argument of the vector type is a numeric expression representing the length of the vector,
+
+- `dec` is the order. Sail allows two different
+types of vector orderings; increasing (inc) and decreasing (dec). Here is an example: ![](images/order.png)
+
+- The last argument is the type of the vector’s elements.
+
+
+Sail allows bitvector literals to be specified in:
+
+- Hexadecimal, e.g. `0x12FE`
+- Binary, e.g. `0b1010100`
+
+*Note* that the length of a hex literal is always four times the number of digits, and
+the length of binary string is **always** the **exact** number of digits, so `0x12FE` has length 16, while `0b1010100`
+has length 7.
+
+#### Accessing vectors. 
+
+A vector can be indexed by using the vector[index] notation.
+So, in the following code:
+let v : vector(4, dec, int) = [1, 2, 3, 4]
+let a = v[0]
+let b = v[3]
+a will be 4, and b will be 1 (note that v is dec). By default, Sail will statically check for out of bounds
+errors, and will raise a type error if it cannot prove that all such vector accesses are valid.
+
+#### Slicing  vectors.
+ 
+ As a special case of access, vectors can be sliced using the
+
+     vector[indexmsb .. indexlsb]
+
+ notation. The indexes are always supplied with the index closest to the MSB being given first, so
+- the bottom 32-bits of a
+decreasing bitvector v as `v[31 .. 0]`,
+- the upper 32-bits of an increasing bitvector as `v[0 .. 31]`,
+
+i.e. the indexing order for decreasing vectors decreases, and the indexing order for increasing vectors
+increases.
+
+#### Updating vectors.   
+
+A vector index can be updated using `[vector with index = expression]` notation. For example
+
+    [v with 0 = bitzero]
+
+We can also update subranges    using `[vector with indexmsb .. indexlsb = expression]`, where the
+order of the indexes is the same as described above for increasing and decreasing vectors. Here is an example:
+
+    [v with 37 .. 36 = 0b00]
+
+Note that these expressions are  just syntactic sugar for the built-in functions `vector_access`, `vector_subrange`, `vector_update`, and `vector_update_subrange`.
+
+#### Iterating over a vector in a type-safe way.
+Here is an example:
+
+    val f : forall 'n, 'n > 0. vector('n, dec, bits(5)) -> bool                                                                                                                                  function f ( regs ) = {                                                                                                                                                                         foreach ( x from 0 to (length(regs) - 1) ) {                                                                                                                                                    if ( regs[x][0] == bitone) then return true                                                                                                                                              };                                                                                                                                                                                             false                                                                                                                                                                                    }
 
 ### Bits and bit vectors
 
@@ -478,10 +542,26 @@ All these types can be used interchangeably provided the rules summarised in the
 
 - `bit` type with members `bitzero` and `bitone`. Note: `bit` is **not** a numeric type, i.e. not `range(0, 1)`
 
-=== Integers
-- Int
-- int
-- Multi-precision
+=== Lists
+
+Sail also has `list` as a built-in type. For example:
+
+    let l : list(int) = [|1, 2, 3|]
+
+where the list concatentation operator is `::` and the empty list is
+`[||]`. Pattern matching is the sole (?) destructor for lists.  Note
+that `list` is a generic type constructor, so you can do e.g.:
+
+    val f : int -> list((int, list(int)))
+    function f (n) = {                                                                                                                                                                                    [|(17,[|4|] )|]                                                                                                                                                                     }
+
+Note that Sail currently does not have a concatenation operator. We
+can write a monomorphic one, e.g.
+
+    val concat_list : forall 'n, ('n > 0 ). ( list( bits('n) ), list( bits('n) ) ) -> list( bits('n) )                                                                                           function concat_list ( l1, l2 ) = {                                                                                                                                                             match l1 {                                                                                                                                                                                      x :: xs => (x :: ( concat_list( xs, l2 ) ) ),                                                                                                                                                [||] => l2                                                                                                                                                                                }                                                                                                                                                                                         }
+
+but this is not currently accepted by the `-c` option. It is accepted
+by the `-just_types` option.
 
 === Type variables
 Many languages have generics.  In C++ you might see a template class definition like 
@@ -535,16 +615,148 @@ https://github.com/rems-project/sail/blob/sail2/src/lib/type_check.ml#L701-L721[
 === Effect annotations
 
 Effect annotations are automatically inferred as of Sail v0.15.
-       
-=== Bits
 
-=== Strings
+### Implicits
+Semantics of `implicit` keyword. So implicits, implicit parameters in
+Scala and type classes in Haskell / Rust. The implicit keyword is very
+restricted:
 
-=== Lists
+- Only usable for integer arguments,
+- They have to be in the leftmost position.
+  
+Implicits are essentially used so if you have a return type, and they
+type-checker knows the length of the return type (like in `bits('m)`)
+you can have that available as a variable in the function body for
+flow-typing etc. The type-checker will desugar it into a explicit
+argument of type `int('m)` and add an explicit argument at each call
+site. If the type system cannot figure out the implicit argument at
+the call site simply it will just ask for it to be given explicitly.
+In other words, if you have a function
 
-=== Structs
+```
+val f: (implicit(’n), bits(’n)) -> bits(’m)
+```
 
-=== mappings
+then you can write e.g.
+    `g ( f ( arg ) )`
+instead of
+    `g ( f ( 64, arg ) )`
+assuming the type-inferencer know that g has a type like
+    `val g : bits(64) -> ...`
+
+For an example of implicits see the RISC-V file
+<code>prelude.sail</code> where we find:
+
+```
+val EXTS : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+val EXTZ : forall 'n 'm, 'm >= 'n. (implicit('m), bits('n)) -> bits('m)
+
+function EXTS(m, v) = sail_sign_extend(v, m)
+function EXTZ(m, v) = sail_zero_extend(v, m)
+```
+
+Note also that this currently compiles:
+
+```
+default Order dec
+$include <prelude.sail>
+
+val f_gt : forall ('n 'm : Int), 'm > 'n. (implicit('m), unit) -> bits('n)
+val f_lt : forall ('n 'm : Int), 'm < 'n. (implicit('m), unit) -> bits('n)
+val lt : forall ('n 'm : Int), 'm < 'n. implicit('m) -> bits('n)
+val gt : forall ('n 'm : Int), 'm > 'n. implicit('m) -> bits('n)
+
+val h : forall ('n 'm : Int), 'm > 'n. (implicit('m), bits('n)) -> bits('n)
+function h (size, bv ) = { bv }
+```
+
+Note that this is fine, because all we are doing is to declare
+functions which can never be called in a type-safe way. This is a bit
+like in e.g. System F types like
+
+    forall X. X -> Unit
+	
+have 0 inhabitants. Still we can declare that type. Note also that the
+pathologies above have nothing to do with the `implicit` keyword, e.g.
+
+    val h_explicit : forall ('n 'm : Int), 'm > 'n. (bits('m), bits('n)) -> bits('n)
+    function h_explicit (tmp, bv ) = { bv }
+
+exhibits the same problem but id free from  `implicit`.
+
+
+In order to get implicit resolution to work, we can also use
+
+    ( bla : bits('n) )
+
+instead of just
+
+    bla
+
+### Existential types 
+The syntax for existentials is `{variables, constraint. type}`. ... In Sail, existentials, they really are just liquid types in disguise:
+  
+```
+      {'n, C('n). int('n)}
+```  
+   
+would be equivalent to the more traditional liquid type syntax
+   
+```
+      {'n : int | C('n)}
+```
+
+The syntactic restriction we have is essentially that we can always
+translate our existentials into that liquid form, as our syntax
+   would allow something like `{'n 'm, C('n, 'm). T('n)}` where the `'m`
+   type-variable does not occur in the type. Additionally we don't
+   allow the variables in these existentials to be anything other than
+   booleans and integers. When used within a datatype declaration D,
+   our syntax is logically
+
+```
+   (exists n. T(n)) -> D
+``` 
+
+(but we omit the `-> D`` because we don't have GADTs) as opposed to
+
+```
+forall n. (T(n) -> D)
+```
+
+
+## Bidirectional mappings.
+
+In ISA specifications, we often want to 'equate' types, for example 
+
+    mapping encdec_bop : bop <-> bits(3) = {
+      RISCV_BEQ  <-> 0b000,
+      RISCV_BNE  <-> 0b001,
+      RISCV_BLT  <-> 0b100,
+      RISCV_BGE  <-> 0b101,
+      RISCV_BLTU <-> 0b110,
+      RISCV_BGEU <-> 0b111
+    }
+    
+where we have an enumeration `bop` containing the symbolic names `RISCV_BEQ` etc. We can write  conversion functions like
+
+    encdec_bop_forwards : bop -> bits(3)
+    encdec_bop_backwards : bits(3) -> bop
+    encdec_bop_forwards_matches : bop -> bool
+    encdec_bop_backwards_matches : bits(3) -> bool
+
+as separate functions. However, those functions can be autogenerated using bidirectional mappings. They are defined similarly to functions, with a val-spec and a definition. Currently, they only work
+for monomorphic types. Their general syntax is:
+
+    val name : type1 <-> type2
+    mapping name = { pattern <-> pattern , pattern <-> pattern , . . . }
+
+which can be shortened to
+
+    mapping name : type1 <-> type2 = { pattern <-> pattern , pattern <-> pattern , . . . }
+
+We can now simply write e.g.  `encdec_bop` for `encdec_bop_forwards` or `encdec_bop_backwards`, and the type-checker will disambiguate. (Note that this requires the LHS and RHS of `<->` to be different.)
+
 
 === Type declarations
 
@@ -585,6 +797,33 @@ for the whole bitvector, and for individual fields
 The bitfield wrapper type will be the something like `union cr = { Mk_cr(bits(xlen)) }`
 TODO: this example is too RISCV specific (requires `xlenbits`), use something more generic.
 
+Here are some more examples.
+
+    bitfield Uinterrupts : xlenbits = {                                                                                                                                                            UEI : 8,  /* external interrupt */                                                                                                                                                           UTI : 4,  /* timer interrupt    */                                                                                                                                                           USI : 0   /* software interrupt */                                                                                                                                                         }
+
+autogenerates the following functions:
+
+- `bits()`
+- `UEI()`
+- `get_UEI`
+- `set_UEI`
+- `update_UEI` (This one is pure, i.e. returns a modified copy, but leaves the original unchanged)
+
+Assume we define
+
+     bitfield Mstatush : bits(32) = {                                                                                                                                                               MBE  : 5,                                                                                                                                                                                    SBE  : 4                                                                                                                                                                                   }                                                                                                                                                                                            register mstatush : Mstatush
+
+then we can do
+
+     mstatush->bits() = 0b00000000000010101000000011100010;
+
+to set the register `mstatush` in one go. For reading we do eg.
+
+     mstatush.MBE()
+
+while writing is like this
+
+     mstatush->MBE() = 0b0;
 
 === Liquid data types 
 
@@ -927,6 +1166,15 @@ include::../functional_code_snippets/sail_calls_cfunc_for_yaml/Makefile[]
 
 
 == Other stuff
+
+## Non-determinism / undefined / IMPDEF
+
+Sometimes we want to express underspecification and non-determinism.
+Sail has a keyword, "undefined". I have not thought about this deeply,
+maybe "undefined" makes it difficult to have constrained
+nondeterminism? (E.g. this 64 bit register contains an undefined
+number x, subjecet to the contraint that x is prime.)
+
 
 [#pragmas]
 === Pragmas
