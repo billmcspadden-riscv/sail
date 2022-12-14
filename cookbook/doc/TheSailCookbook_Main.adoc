@@ -604,8 +604,30 @@ val f3 : forall 'n, ('n > 0). bits('n) -> bits('n)
 function f3(bs) = bs
 ---- 
 
+Let's also try and index into a bitvector and see how Sail prevents index-out-of-bounds errors at compile time. Consider
+----
+val f4 : forall 'n, ('n > 0). bits('n) -> bit
+function f4(bs) = bs[0] 
+----
+But if we change `function f4(bs) = bs[0]` to `function f4(bs) = bs[17]` the compiler complains:
+image:./images/sail-error1.png[]
 
-=== A more complicated example
+If we change `forall 'n, ('n > 0). bits('n) -> bit` to e.g.
+----
+val f5 : forall 'n, ('n > 18). bits('n) -> bit
+function f5(bs) = bs[17] 
+----
+The compiler is happy again. Let's do something a little bit more interesting. Here we have a function
+----
+val f6 : forall 'm 'n, ('m > 18 & 'm == 'n). (bits('m), bits('n)) -> bits('n)
+function f6(b1, b2) =
+         let b : bit = b2[7] in b1 + b2
+----
+that takes two bitvectors of length at least 19 that must also 
+of the same lenth. It indexes one of them at index 7. Then it returns `b1 + b2` which is the pointwise logical sum of bits. (See  https://github.com/rems-project/sail/blob/sail2/lib/vector_dec.sail#L197-L205[vector_dec.sail] from Sail's standard library for a definition.)
+
+
+== A more complicated example
 
 Tthe following example is one that shows  some nuances about the Sail type
 system.  This example comes from Alasdair Armstrong who was asked to help with
