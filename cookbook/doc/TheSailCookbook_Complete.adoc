@@ -139,7 +139,7 @@ TBD
 
 TBD
 
-=== MacOS (Martin)
+=== MacOS
 
 
 Installation with `brew` and `opam` is straighforward. On my
@@ -750,8 +750,53 @@ typing system also ensure that all calls to such a function pass and receive bit
 
 For the cognoscenti we remark that liquid types are a form of dependent types, since numbers like `m` and `n` are parts of types. But unlike general dependent types, which have undecidable type-inference, and type-checking, liquid types are suitably restricted so that, simplifying a bit, type-inference remains decidable (and is handled by an SMT solver, Z3 in the current implementation of Sail).
 
+We explain liquid types with a sequence of examples. First consider
+----
+val f1 : bits(48) -> bits(48)
+function f1(bs) = bs
+----
 
-=== A more complicated example
+This function is the identity on 48-bit bitvectors. Naturally there is nothing special about 48 in this context. If it were not for types,
+----
+function f1(bs) = bs
+----
+would handle 47-bits or 99-bits just as well. Note that this *not* generics in the sense of Java above, since numbers like 48 are not types in the conventional sense. (We will later elaborate on details.) So what we really want is something like
+----
+val f2 : forall 'n. bits('n) -> bits('n)
+function f2(bs) = bs
+----
+Indeed, this is correct Sail. The `forall `n` is like C++'s `template <class T>` why the `n` in place of C++'s `T`, but one has to be careful because the correspondence is not too tight: C++ is a lot less principled than Sail.
+
+Let's do something more interesting with liquid types: let's index into a bitvector in a type-safe way. We start with a function that is the identity on bitvectors, but *requires* that the bitvectors be non-trivial, meaning their size is greater than zero.
+----
+val f3 : forall 'n, ('n > 0). bits('n) -> bits('n)
+function f3(bs) = bs
+----
+
+Let's also try and index into a bitvector and see how Sail prevents index-out-of-bounds errors at compile time. Consider
+----
+val f4 : forall 'n, ('n > 0). bits('n) -> bit
+function f4(bs) = bs[0]
+----
+But if we change `function f4(bs) = bs[0]` to `function f4(bs) = bs[17]` the compiler complains:
+image:./images/sail-error1.png[]
+
+If we change `forall 'n, ('n > 0). bits('n) -> bit` to e.g.
+----
+val f5 : forall 'n, ('n > 18). bits('n) -> bit
+function f5(bs) = bs[17]
+----
+The compiler is happy again. Let's do something a little bit more interesting. Here we have a function
+----
+val f6 : forall 'm 'n, ('m > 18 & 'm == 'n). (bits('m), bits('n)) -> bits('n)
+function f6(b1, b2) =
+         let b : bit = b2[7] in b1 + b2
+----
+that takes two bitvectors of length at least 19 that must also
+of the same lenth. It indexes one of them at index 7. Then it returns `b1 + b2` which is the pointwise logical sum of bits. (See  https://github.com/rems-project/sail/blob/sail2/lib/vector_dec.sail#L197-L205[vector_dec.sail] from Sail's standard library for a definition.)
+
+
+== A more complicated example
 
 Tthe following example is one that shows  some nuances about the Sail type
 system.  This example comes from Alasdair Armstrong who was asked to help with
